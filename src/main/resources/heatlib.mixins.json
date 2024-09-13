@@ -1,0 +1,11 @@
+{
+    "required": true,
+    "package": "niv.heatlib.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "ExampleMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

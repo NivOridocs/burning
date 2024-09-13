@@ -1,0 +1,37 @@
+{
+    "schemaVersion": 1,
+    "id": "heatlib",
+    "version": "${version}",
+    "name": "HeatLib",
+    "description": "TODO",
+    "authors": [
+        "Niv Oridocs"
+    ],
+    "contact": {
+        "homepage": "TODO",
+        "sources": "TODO"
+    },
+    "license": "MIT",
+    "icon": "assets/heatlib/icon.png",
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            "niv.heatlib.HeatLib"
+        ],
+        "fabric-datagen": [
+            "niv.heatlib.HeatLibDataGenerator"
+        ]
+    },
+    "mixins": [
+        "heatlib.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.16.5",
+        "minecraft": "~1.21",
+        "java": ">=21",
+        "fabric-api": "*"
+    },
+    "suggests": {
+        "another-mod": "g3jBz897"
+    }
+}
