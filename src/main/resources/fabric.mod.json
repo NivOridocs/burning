@@ -16,12 +16,13 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "niv.heatlib.HeatLib"
+            "niv.heatlib.impl.HeatLib"
         ],
         "fabric-datagen": [
-            "niv.heatlib.HeatLibDataGenerator"
+            "niv.heatlib.datagen.HeatLibDataGenerator"
         ]
     },
+    "accessWidener" : "heatlib.accessWidener",
     "mixins": [
         "heatlib.mixins.json"
     ],

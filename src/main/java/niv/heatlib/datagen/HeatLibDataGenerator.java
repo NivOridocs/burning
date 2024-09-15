@@ -1,4 +1,4 @@
-package niv.heatlib;
+package niv.heatlib.datagen;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;

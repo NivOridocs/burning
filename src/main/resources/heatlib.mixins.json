@@ -1,9 +1,9 @@
 {
     "required": true,
-    "package": "niv.heatlib.mixin",
+    "package": "niv.heatlib.impl.mixin",
     "compatibilityLevel": "JAVA_21",
     "mixins": [
-        "ExampleMixin"
+        "BlockEntityAccessor"
     ],
     "injectors": {
         "defaultRequire": 1
