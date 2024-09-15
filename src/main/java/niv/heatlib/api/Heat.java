@@ -102,9 +102,9 @@ public final class Heat extends Number implements Comparable<Heat> {
 
     public Heat withPercent(int value) {
         double max;
-        if (value == 0) {
+        if (value <= 0) {
             return this.zero();
-        } else if (value > 0 && value <= (max = getBurnDuration())) {
+        } else if (value <= (max = getBurnDuration())) {
             return new Heat(value / max, this.fuel);
         } else {
             return this.one();
@@ -113,9 +113,9 @@ public final class Heat extends Number implements Comparable<Heat> {
 
     public Heat withPercent(int value, ToIntFunction<ItemStack> getBurnDuration) {
         double max;
-        if (value == 0) {
+        if (value <= 0) {
             return this.zero();
-        } else if (value > 0 && value <= (max = getBurnDuration(getBurnDuration))) {
+        } else if (value <= (max = getBurnDuration(getBurnDuration))) {
             return new Heat(value / max, this.fuel);
         } else {
             return this.one();
