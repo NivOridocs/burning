@@ -43,11 +43,11 @@ public final class Heat extends Number implements Comparable<Heat> {
     }
 
     public int getBurnDuration() {
-        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(this.fuel, 0);
+        return defaultBurnDuration(this.fuel);
     }
 
-    public int getBurnDuration(ToIntFunction<ItemStack> custom) {
-        return custom.applyAsInt(this.fuelStack);
+    public int getBurnDuration(ToIntFunction<ItemStack> customBurnDuration) {
+        return customBurnDuration.applyAsInt(this.fuelStack);
     }
 
     @Override
@@ -70,29 +70,47 @@ public final class Heat extends Number implements Comparable<Heat> {
         return this.getBurnDuration() * percent;
     }
 
-    public int intValue(ToIntFunction<ItemStack> getBurnDuration) {
-        return (int) this.doubleValue(getBurnDuration);
+    public int intValue(ToIntFunction<ItemStack> customBurnDuration) {
+        return (int) this.doubleValue(customBurnDuration);
     }
 
-    public long longValue(ToIntFunction<ItemStack> getBurnDuration) {
-        return (long) this.doubleValue(getBurnDuration);
+    public long longValue(ToIntFunction<ItemStack> customBurnDuration) {
+        return (long) this.doubleValue(customBurnDuration);
     }
 
-    public float floatValue(ToIntFunction<ItemStack> getBurnDuration) {
-        return (float) this.doubleValue(getBurnDuration);
+    public float floatValue(ToIntFunction<ItemStack> customBurnDuration) {
+        return (float) this.doubleValue(customBurnDuration);
     }
 
-    public double doubleValue(ToIntFunction<ItemStack> getBurnDuration) {
-        return this.getBurnDuration(getBurnDuration) * percent;
+    public double doubleValue(ToIntFunction<ItemStack> customBurnDuration) {
+        return this.getBurnDuration(customBurnDuration) * percent;
     }
 
     @Override
     public int compareTo(Heat that) {
-        return Double.compare(this.doubleValue(), that.doubleValue());
+        var result = Double.compare(this.doubleValue(), that.doubleValue());
+        if (result == 0) {
+            result = Integer.compare(this.getBurnDuration(), that.getBurnDuration());
+        }
+        if (result == 0) {
+            result = Integer.compare(Item.getId(this.fuel), Item.getId(that.fuel));
+        }
+        return result;
     }
 
-    public int compareTo(Heat that, ToIntFunction<ItemStack> getBurnDuration) {
-        return Double.compare(this.doubleValue(getBurnDuration), that.doubleValue(getBurnDuration));
+    public int compareTo(Heat that, ToIntFunction<ItemStack> customBurnDuration) {
+        var result = Double.compare(
+                this.doubleValue(customBurnDuration),
+                that.doubleValue(customBurnDuration));
+        if (result == 0) {
+            result = Integer.compare(
+                    this.getBurnDuration(customBurnDuration),
+                    that.getBurnDuration(customBurnDuration));
+        }
+        if (result == 0) {
+            result = Integer.compare(Item.getId(this.fuel), Item.getId(that.fuel));
+        }
+        return result;
     }
 
     public Heat zero() {
@@ -103,7 +121,7 @@ public final class Heat extends Number implements Comparable<Heat> {
         return ONES.computeIfAbsent(this.fuel, item -> new Heat(1, item));
     }
 
-    public Heat withPercent(int value) {
+    public Heat withValue(int value) {
         double max;
         if (value <= 0) {
             return this.zero();
@@ -114,11 +132,11 @@ public final class Heat extends Number implements Comparable<Heat> {
         }
     }
 
-    public Heat withPercent(int value, ToIntFunction<ItemStack> getBurnDuration) {
+    public Heat withValue(int value, ToIntFunction<ItemStack> customBurnDuration) {
         double max;
         if (value <= 0) {
             return this.zero();
-        } else if (value <= (max = getBurnDuration(getBurnDuration))) {
+        } else if (value <= (max = getBurnDuration(customBurnDuration))) {
             return new Heat(value / max, this.fuel);
         } else {
             return this.one();
@@ -130,7 +148,7 @@ public final class Heat extends Number implements Comparable<Heat> {
         double x;
         if (this.percent == 0) {
             return of(fuel).orElse(this);
-        } else if ((max = AbstractFurnaceBlockEntity.getFuel().getOrDefault(fuel, 0)) > 0
+        } else if ((max = defaultBurnDuration(fuel)) > 0
                 && (x = this.percent * max / getBurnDuration()) <= 1d) {
             return new Heat(x, fuel);
         } else {
@@ -138,12 +156,12 @@ public final class Heat extends Number implements Comparable<Heat> {
         }
     }
 
-    public Heat withFuel(Item fuel, ToIntFunction<ItemStack> getBurnDuration) {
+    public Heat withFuel(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
         double max;
         double x;
         if (this.percent == 0) {
             return of(fuel).orElse(this);
-        } else if ((max = getBurnDuration.applyAsInt(new ItemStack(fuel))) > 0
+        } else if ((max = customBurnDuration.applyAsInt(new ItemStack(fuel))) > 0
                 && (x = this.percent * max / getBurnDuration()) <= 1d) {
             return new Heat(x, fuel);
         } else {
@@ -187,7 +205,7 @@ public final class Heat extends Number implements Comparable<Heat> {
     public static final Optional<Heat> of(double percent, Item fuel) {
         if (percent == 0) {
             return of(fuel);
-        } else if (percent > 0 && percent <= 0 && AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)) {
+        } else if (percent > 0 && percent <= 1 && AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)) {
             return Optional.of(new Heat(percent, fuel));
         } else {
             return Optional.empty();
@@ -198,7 +216,7 @@ public final class Heat extends Number implements Comparable<Heat> {
         double max;
         if (value == 0) {
             return of(fuel);
-        } else if (value > 0 && (max = AbstractFurnaceBlockEntity.getFuel().getOrDefault(fuel, 0)) > 0
+        } else if (value > 0 && (max = defaultBurnDuration(fuel)) > 0
                 && value <= max) {
             return Optional.of(new Heat(value / max, fuel));
         } else {
@@ -206,11 +224,11 @@ public final class Heat extends Number implements Comparable<Heat> {
         }
     }
 
-    public static final Optional<Heat> of(int value, Item fuel, ToIntFunction<ItemStack> getBurnDuration) {
+    public static final Optional<Heat> of(int value, Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
         double max;
         if (value == 0) {
             return of(fuel);
-        } else if (value > 0 && (max = getBurnDuration.applyAsInt(new ItemStack(fuel))) > 0 && value <= max) {
+        } else if (value > 0 && (max = customBurnDuration.applyAsInt(new ItemStack(fuel))) > 0 && value <= max) {
             return Optional.of(new Heat(value / max, fuel));
         } else {
             return Optional.empty();
@@ -220,10 +238,18 @@ public final class Heat extends Number implements Comparable<Heat> {
     public static final Heat getMaxHeat() {
         if (maxFuel == null) {
             maxFuel = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                .max((a, b) -> Integer.compare(a.getValue(), b.getValue()))
-                .map(Map.Entry::getKey)
-                .orElse(Items.LAVA_BUCKET);
+                    .max((a, b) -> Integer.compare(a.getValue(), b.getValue()))
+                    .map(Map.Entry::getKey)
+                    .orElse(Items.LAVA_BUCKET);
         }
         return ONES.computeIfAbsent(maxFuel, item -> new Heat(1d, item));
+    }
+
+    public static final int defaultBurnDuration(ItemStack stack) {
+        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0);
+    }
+
+    public static final int defaultBurnDuration(Item item) {
+        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(item, 0);
     }
 }

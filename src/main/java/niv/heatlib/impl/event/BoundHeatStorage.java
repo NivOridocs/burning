@@ -1,5 +1,7 @@
 package niv.heatlib.impl.event;
 
+import java.util.Map;
+
 import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -11,69 +13,86 @@ import niv.heatlib.api.HeatStorage;
 import niv.heatlib.impl.mixin.BlockEntityAccessor;
 
 @ApiStatus.Internal
-public final class BoundHeatStorage
+public class BoundHeatStorage
         extends SnapshotParticipant<BoundHeatStorage.Snapshot>
         implements HeatStorage {
 
-    static final record Snapshot(int maxHeat, int currentHeat) {
+    static final record Snapshot(int maxHeat, int currentHeat, Heat zero) {
     }
 
     private final AbstractFurnaceBlockEntity target;
 
+    private Heat zero;
+
     BoundHeatStorage(AbstractFurnaceBlockEntity target) {
         this.target = target;
+        this.zero = Heat.getMaxHeat().zero();
     }
 
     @Override
     public Heat insert(Heat heat, TransactionContext transaction) {
-        int value = heat.intValue(target::getBurnDuration);
-        int fuelTime = heat.getBurnDuration(target::getBurnDuration);
-        int delta = Math.min(Math.max(target.litDuration, fuelTime) - target.litTime, value);
+        int value = heat.intValue(this.target::getBurnDuration);
+        int fuelTime = heat.getBurnDuration(this.target::getBurnDuration);
+        int delta = Math.min(Math.max(this.target.litDuration, fuelTime) - this.target.litTime, value);
         updateSnapshots(transaction);
-        target.litTime += delta;
-        if ((target.litDuration > fuelTime && target.litTime <= fuelTime) || target.litTime > target.litDuration) {
-            target.litDuration = fuelTime;
+        this.target.litTime += delta;
+        if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
+                || this.target.litTime > this.target.litDuration) {
+            this.target.litDuration = fuelTime;
+            this.zero = heat.zero();
         }
-        return heat.withPercent(value - delta);
+        return heat.withValue(value - delta, this.target::getBurnDuration);
     }
 
     @Override
     public Heat extract(Heat heat, TransactionContext transaction) {
-        int value = Math.min(target.litTime, heat.intValue(target::getBurnDuration));
-        int fuelTime = heat.getBurnDuration(target::getBurnDuration);
+        int value = Math.min(this.target.litTime, heat.intValue(this.target::getBurnDuration));
+        int fuelTime = heat.getBurnDuration(this.target::getBurnDuration);
         updateSnapshots(transaction);
-        target.litTime -= value;
-        if (target.litDuration > fuelTime && target.litTime <= fuelTime) {
-            target.litDuration = fuelTime;
+        this.target.litTime -= value;
+        if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {
+            this.target.litDuration = fuelTime;
+            this.zero = heat.zero();
         }
-        return heat.withPercent(value);
+        return heat.withValue(value, this.target::getBurnDuration);
     }
 
     @Override
     public Heat getCurrentHeat() {
-        return Heat.getMaxHeat().withPercent(target.litTime, target::getBurnDuration);
+        if (this.target.litDuration != zero.getBurnDuration(this.target::getBurnDuration)) {
+            this.zero = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
+                    .filter(entry -> entry.getValue() == this.target.litDuration)
+                    .map(Map.Entry::getKey).findFirst()
+                    .flatMap(Heat::of).orElseGet(Heat::getMaxHeat)
+                    .zero();
+        }
+        return zero.withValue(this.target.litTime, this.target::getBurnDuration);
     }
 
     @Override
     protected Snapshot createSnapshot() {
-        return new Snapshot(target.litDuration, target.litTime);
+        return new Snapshot(
+                this.target.litDuration,
+                this.target.litTime,
+                this.zero);
     }
 
     @Override
     protected void readSnapshot(Snapshot snapshot) {
-        target.litTime = snapshot.currentHeat();
-        target.litDuration = snapshot.maxHeat();
+        this.target.litTime = snapshot.currentHeat();
+        this.target.litDuration = snapshot.maxHeat();
+        this.zero = snapshot.zero();
     }
 
     @Override
     protected void onFinalCommit() {
-        var state = target.level.getBlockState(target.worldPosition);
+        var state = this.target.level.getBlockState(this.target.worldPosition);
         var wasBurning = state.getValue(BlockStateProperties.LIT).booleanValue();
-        var isBurning = target.litTime > 0;
+        var isBurning = this.target.litTime > 0;
         if (wasBurning != isBurning) {
             state = state.setValue(BlockStateProperties.LIT, isBurning);
-            target.level.setBlockAndUpdate(target.worldPosition, state);
-            BlockEntityAccessor.invokeSetChanged(target.level, target.worldPosition, state);
+            this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
+            BlockEntityAccessor.invokeSetChanged(this.target.level, this.target.worldPosition, state);
         }
     }
 }

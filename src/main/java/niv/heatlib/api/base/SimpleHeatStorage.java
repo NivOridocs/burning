@@ -7,8 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import niv.heatlib.api.Heat;
 import niv.heatlib.api.HeatStorage;
 
@@ -28,14 +26,14 @@ public class SimpleHeatStorage
     protected Heat zero;
 
     public SimpleHeatStorage() {
-        this(SimpleHeatStorage::defaultBurnDuration);
+        this(null);
     }
 
     public SimpleHeatStorage(@Nullable ToIntFunction<ItemStack> getBurnDuration) {
-        this.getBurnDuration = getBurnDuration == null ? SimpleHeatStorage::defaultBurnDuration : getBurnDuration;
+        this.getBurnDuration = getBurnDuration == null ? Heat::defaultBurnDuration : getBurnDuration;
         this.maxHeat = 0;
         this.currentHeat = 0;
-        this.zero = Heat.of(Items.COAL).get();
+        this.zero = Heat.getMaxHeat().zero();
     }
 
     @Override
@@ -49,7 +47,7 @@ public class SimpleHeatStorage
             this.maxHeat = fuelTime;
             this.zero = heat.zero();
         }
-        return heat.withPercent(value - delta);
+        return heat.withValue(value - delta, this.getBurnDuration);
     }
 
     @Override
@@ -62,17 +60,17 @@ public class SimpleHeatStorage
             this.maxHeat = fuelTime;
             this.zero = heat.zero();
         }
-        return heat.withPercent(value);
+        return heat.withValue(value, this.getBurnDuration);
     }
 
     @Override
     public Heat getCurrentHeat() {
-        return zero.withPercent(currentHeat, getBurnDuration);
+        return zero.withValue(this.currentHeat, this.getBurnDuration);
     }
 
     @Override
     protected Snapshot createSnapshot() {
-        return new Snapshot(maxHeat, currentHeat, zero);
+        return new Snapshot(this.maxHeat, this.currentHeat, this.zero);
     }
 
     @Override
@@ -80,9 +78,5 @@ public class SimpleHeatStorage
         this.maxHeat = snapshot.maxHeat;
         this.currentHeat = snapshot.currentHeat;
         this.zero = snapshot.zero;
-    }
-
-    private static final int defaultBurnDuration(ItemStack stack) {
-        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0);
     }
 }
