@@ -3,49 +3,70 @@ package niv.heatlib.impl.event;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapMaker;
+
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.ServerStarting;
-import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
+import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
+import net.fabricmc.fabric.impl.transfer.DebugMessages;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import niv.heatlib.api.HeatStorage;
-import niv.heatlib.api.HeatStorageProvider;
 import niv.heatlib.api.event.HeatStorageLifecycleEvents;
 
 @ApiStatus.Internal
 public class HeatStorageBinder implements ServerStarting {
 
-    private static final HeatStorageProvider DEFAULT_PROVIDER = HeatStorageBinder::defaultHeatStorage;
+    private record LevelPos(Level level, BlockPos pos) {
+        @Override
+        public String toString() {
+            return DebugMessages.forGlobalPos(level, pos);
+        }
+    }
+
+    private static final Map<LevelPos, BoundHeatStorage> STORAGES = new MapMaker()
+            .concurrencyLevel(1)
+            .weakValues()
+            .makeMap();
+
+    private static final BlockApiProvider<HeatStorage, @Nullable Direction> DEFAULT_PROVIDER = HeatStorageBinder::defaultHeatStorage;
 
     @Override
     public void onServerStarting(MinecraftServer server) {
-        var entities = server.registryAccess().registryOrThrow(Registries.BLOCK_ENTITY_TYPE);
-        var result = entities.stream()
+        var map = server.registryAccess().registryOrThrow(Registries.BLOCK).stream()
                 .filter(this::byEntity)
-                .collect(toMap(type -> type, type -> DEFAULT_PROVIDER, (a, b) -> a,
-                        HashMap<BlockEntityType<?>, HeatStorageProvider>::new));
-        HeatStorageLifecycleEvents.HEAT_STORAGE_BINDING.invoker().accept(result);
-        result.forEach((type, provider) -> HeatStorage.SIDED.registerForBlockEntities(provider, type));
+                .collect(toMap(block -> block, block -> DEFAULT_PROVIDER, (a, b) -> a,
+                        HashMap<Block, BlockApiProvider<HeatStorage, @Nullable Direction>>::new));
+        HeatStorageLifecycleEvents.HEAT_STORAGE_BINDING.invoker().accept(ImmutableMap.copyOf(map));
+        map.forEach((block, provider) -> HeatStorage.SIDED.registerForBlocks(provider, block));
     }
 
-    private boolean byEntity(BlockEntityType<?> type) {
-        return ((BlockEntityTypeAccessor) type).getBlocks().stream().findFirst()
-                .map(block -> type.create(BlockPos.ZERO, block.defaultBlockState()))
-                .filter(AbstractFurnaceBlockEntity.class::isInstance)
-                .isPresent();
+    private boolean byEntity(Block block) {
+        if (block instanceof EntityBlock entityBlock) {
+            var blockEntity = entityBlock.newBlockEntity(BlockPos.ZERO, block.defaultBlockState());
+            return blockEntity instanceof AbstractFurnaceBlockEntity;
+        } else {
+            return false;
+        }
     }
 
-    private static final HeatStorage defaultHeatStorage(BlockEntity entity, @Nullable Direction direction) {
-        if (entity instanceof AbstractFurnaceBlockEntity target) {
-            return new BoundHeatStorage(target);
+    private static final HeatStorage defaultHeatStorage(Level level, BlockPos pos, BlockState state,
+            BlockEntity blockEntity, Direction direction) {
+        if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
+            return STORAGES.computeIfAbsent(new LevelPos(level, pos), key -> new BoundHeatStorage(entity));
         } else {
             return null;
         }
