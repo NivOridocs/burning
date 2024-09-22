@@ -8,6 +8,7 @@ import java.util.function.ToIntFunction;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
 @SuppressWarnings("java:S1948")
@@ -15,6 +16,8 @@ public final class Heat extends Number implements Comparable<Heat> {
 
     private static final Map<Item, Heat> ZEROS = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
     private static final Map<Item, Heat> ONES = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
+
+    private static Item maxFuel = null;
 
     private final double percent;
     private final Item fuel;
@@ -214,11 +217,13 @@ public final class Heat extends Number implements Comparable<Heat> {
         }
     }
 
-    static final Item maxFuel(Heat a, Heat b) {
-        return a.getBurnDuration() >= b.getBurnDuration() ? a.fuel : b.fuel;
-    }
-
-    static final Item maxFuel(Heat a, Heat b, ToIntFunction<ItemStack> getBurnDuration) {
-        return a.getBurnDuration(getBurnDuration) >= b.getBurnDuration(getBurnDuration) ? a.fuel : b.fuel;
+    public static final Heat getMaxHeat() {
+        if (maxFuel == null) {
+            maxFuel = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
+                .max((a, b) -> Integer.compare(a.getValue(), b.getValue()))
+                .map(Map.Entry::getKey)
+                .orElse(Items.LAVA_BUCKET);
+        }
+        return ONES.computeIfAbsent(maxFuel, item -> new Heat(1d, item));
     }
 }

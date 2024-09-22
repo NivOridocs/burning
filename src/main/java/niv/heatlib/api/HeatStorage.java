@@ -14,10 +14,18 @@ public interface HeatStorage {
             ResourceLocation.tryBuild(HeatLib.MOD_ID, "heat_storage"),
             HeatStorage.class, Direction.class);
 
-    Heat getCurrentHeat();
+    default boolean supportsInsertion() {
+        return true;
+    }
+
+    Heat insert(Heat heat, TransactionContext transaction);
+
+    default boolean supportsExtraction() {
+        return true;
+    }
 
     Heat extract(Heat heat, TransactionContext transaction);
 
-    Heat insert(Heat heat, TransactionContext transaction);
+    Heat getCurrentHeat();
 
 }

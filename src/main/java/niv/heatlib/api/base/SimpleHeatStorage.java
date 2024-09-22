@@ -39,8 +39,17 @@ public class SimpleHeatStorage
     }
 
     @Override
-    public Heat getCurrentHeat() {
-        return zero.withPercent(currentHeat, getBurnDuration);
+    public Heat insert(Heat heat, TransactionContext transaction) {
+        int value = heat.intValue(this.getBurnDuration);
+        int fuelTime = heat.getBurnDuration(this.getBurnDuration);
+        int delta = Math.min(Math.max(this.maxHeat, fuelTime) - this.currentHeat, value);
+        updateSnapshots(transaction);
+        this.currentHeat += delta;
+        if ((this.maxHeat > fuelTime && this.currentHeat <= fuelTime) || this.currentHeat > this.maxHeat) {
+            this.maxHeat = fuelTime;
+            this.zero = heat.zero();
+        }
+        return heat.withPercent(value - delta);
     }
 
     @Override
@@ -57,17 +66,8 @@ public class SimpleHeatStorage
     }
 
     @Override
-    public Heat insert(Heat heat, TransactionContext transaction) {
-        int value = heat.intValue(this.getBurnDuration);
-        int fuelTime = heat.getBurnDuration(this.getBurnDuration);
-        int delta = Math.min(Math.max(this.maxHeat, fuelTime) - this.currentHeat, value);
-        updateSnapshots(transaction);
-        this.currentHeat += delta;
-        if ((this.maxHeat > fuelTime && this.currentHeat <= fuelTime) || this.currentHeat > this.maxHeat) {
-            this.maxHeat = fuelTime;
-            this.zero = heat.zero();
-        }
-        return heat.withPercent(value - delta);
+    public Heat getCurrentHeat() {
+        return zero.withPercent(currentHeat, getBurnDuration);
     }
 
     @Override
