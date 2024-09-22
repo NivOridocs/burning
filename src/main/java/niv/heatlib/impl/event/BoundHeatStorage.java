@@ -60,13 +60,19 @@ public class BoundHeatStorage
     @Override
     public Heat getCurrentHeat() {
         if (this.target.litDuration != zero.getBurnDuration(this.target::getBurnDuration)) {
+            int value = multiplyByLava(this.target.litDuration);
             this.zero = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                    .filter(entry -> entry.getValue() == this.target.litDuration)
+                    .filter(entry -> entry.getValue() == value)
                     .map(Map.Entry::getKey).findFirst()
                     .flatMap(Heat::of).orElseGet(Heat::getMaxHeat)
                     .zero();
         }
         return zero.withValue(this.target.litTime, this.target::getBurnDuration);
+    }
+
+    private int multiplyByLava(int value) {
+        return value * Heat.getMaxHeat().getBurnDuration()
+                / Heat.getMaxHeat().getBurnDuration(this.target::getBurnDuration);
     }
 
     @Override
