@@ -18,7 +18,7 @@ public final class DynamicHeatStorage<T extends BlockEntity>
         extends SnapshotParticipant<DynamicHeatStorage.Snapshot>
         implements HeatStorage {
 
-    static final record Snapshot(int maxHeat, int currentHeat, Heat zero) {
+    static final record Snapshot(double maxHeat, double currentHeat, Heat zero) {
     }
 
     private final DynamicHeatStorageFactory<T> factory;
@@ -33,20 +33,20 @@ public final class DynamicHeatStorage<T extends BlockEntity>
         this.zero = Heat.getMaxHeat().zero();
     }
 
-    private int currentHeat() {
+    private double currentHeat() {
         return FieldExtra.getInt(this.factory.litTime, this.target);
     }
 
-    private void currentHeat(int value) {
-        FieldExtra.setInt(this.factory.litTime, this.target, value);
+    private void currentHeat(double value) {
+        FieldExtra.setInt(this.factory.litTime, this.target, (int) value);
     }
 
-    private int maxHeat() {
+    private double maxHeat() {
         return FieldExtra.getInt(this.factory.litDuration, this.target);
     }
 
-    private void maxHeat(int value) {
-        FieldExtra.setInt(this.factory.litDuration, this.target, value);
+    private void maxHeat(double value) {
+        FieldExtra.setInt(this.factory.litDuration, this.target, (int) value);
     }
 
     private int getBurnDuration(ItemStack stack) {
@@ -55,11 +55,11 @@ public final class DynamicHeatStorage<T extends BlockEntity>
 
     @Override
     public Heat insert(Heat heat, TransactionContext transaction) {
-        int value = heat.intValue(this::getBurnDuration);
+        double value = heat.doubleValue(this::getBurnDuration);
         int fuelTime = heat.getBurnDuration(this::getBurnDuration);
-        int currentHeat = currentHeat();
-        int maxHeat = maxHeat();
-        int delta = Math.min(Math.max(maxHeat, fuelTime) - currentHeat, value);
+        double currentHeat = currentHeat();
+        double maxHeat = maxHeat();
+        double delta = Math.min(Math.max(maxHeat, fuelTime) - currentHeat, value);
         updateSnapshots(transaction);
         currentHeat += delta;
         currentHeat(currentHeat);
@@ -67,13 +67,13 @@ public final class DynamicHeatStorage<T extends BlockEntity>
             maxHeat(fuelTime);
             this.zero = heat.zero();
         }
-        return heat.withValue(value - delta, this::getBurnDuration);
+        return heat.withValue((int) (value - delta), this::getBurnDuration);
     }
 
     @Override
     public Heat extract(Heat heat, TransactionContext transaction) {
-        int currentHeat = currentHeat();
-        int value = Math.min(currentHeat, heat.intValue(this::getBurnDuration));
+        double currentHeat = currentHeat();
+        double value = Math.min(currentHeat, heat.doubleValue(this::getBurnDuration));
         int fuelTime = heat.getBurnDuration(this::getBurnDuration);
         updateSnapshots(transaction);
         currentHeat -= value;
@@ -82,7 +82,7 @@ public final class DynamicHeatStorage<T extends BlockEntity>
             maxHeat(fuelTime);
             this.zero = heat.zero();
         }
-        return heat.withValue(value, this::getBurnDuration);
+        return heat.withValue((int) value, this::getBurnDuration);
     }
 
     @Override
@@ -95,10 +95,10 @@ public final class DynamicHeatStorage<T extends BlockEntity>
                     .flatMap(Heat::of).orElseGet(Heat::getMaxHeat)
                     .zero();
         }
-        return zero.withValue(currentHeat());
+        return zero.withValue((int) currentHeat());
     }
 
-    private int multiplyByLava(int value) {
+    private double multiplyByLava(double value) {
         return value * Heat.getMaxHeat().getBurnDuration()
                 / Heat.getMaxHeat().getBurnDuration(this::getBurnDuration);
     }
