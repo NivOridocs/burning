@@ -20,6 +20,9 @@
         ],
         "fabric-datagen": [
             "niv.heatlib.datagen.HeatLibDataGenerator"
+        ],
+        "fabric-gametest": [
+            "niv.heatlib.gametest.HeatStorageBinderTests"
         ]
     },
     "accessWidener" : "heatlib.accessWidener",

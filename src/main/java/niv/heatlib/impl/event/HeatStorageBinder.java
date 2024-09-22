@@ -47,7 +47,7 @@ public class HeatStorageBinder implements ServerStarting {
         if (entity instanceof AbstractFurnaceBlockEntity target) {
             return new BoundHeatStorage(target);
         } else {
-            throw new IllegalArgumentException("'entity' isn't an AbstractFurnaceBlockEntity");
+            return null;
         }
     }
 }

@@ -24,6 +24,16 @@ fabricApi {
 
 loom {
 	accessWidenerPath = file("src/main/resources/heatlib.accessWidener")
+
+	runs {
+		gametest {
+			server()
+			name "Game Test"
+			vmArg "-Dfabric-api.gametest"
+			vmArg "-Dfabric-api.gametest.report-file=${project.buildDir}/junit.xml"
+			runDir "build/gametest"
+		}
+	}
 }
 
 dependencies {
@@ -35,7 +45,7 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }
 
 processResources {
