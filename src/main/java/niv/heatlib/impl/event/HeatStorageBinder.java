@@ -3,17 +3,14 @@ package niv.heatlib.impl.event;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.MapMaker;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.ServerStarting;
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
-import net.fabricmc.fabric.impl.transfer.DebugMessages;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -29,18 +26,6 @@ import niv.heatlib.api.event.HeatStorageLifecycleEvents;
 
 @ApiStatus.Internal
 public class HeatStorageBinder implements ServerStarting {
-
-    private record LevelPos(Level level, BlockPos pos) {
-        @Override
-        public String toString() {
-            return DebugMessages.forGlobalPos(level, pos);
-        }
-    }
-
-    private static final Map<LevelPos, BoundHeatStorage> STORAGES = new MapMaker()
-            .concurrencyLevel(1)
-            .weakValues()
-            .makeMap();
 
     private static final BlockApiProvider<HeatStorage, @Nullable Direction> DEFAULT_PROVIDER = HeatStorageBinder::defaultHeatStorage;
 
@@ -66,7 +51,7 @@ public class HeatStorageBinder implements ServerStarting {
     private static final HeatStorage defaultHeatStorage(Level level, BlockPos pos, BlockState state,
             BlockEntity blockEntity, Direction direction) {
         if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
-            return STORAGES.computeIfAbsent(new LevelPos(level, pos), key -> new BoundHeatStorage(entity));
+            return BoundHeatStorage.of(level, pos, entity);
         } else {
             return null;
         }

@@ -4,8 +4,13 @@ import java.util.Map;
 
 import org.jetbrains.annotations.ApiStatus;
 
+import com.google.common.collect.MapMaker;
+
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
+import net.fabricmc.fabric.impl.transfer.DebugMessages;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heatlib.api.Heat;
@@ -19,6 +24,18 @@ public class BoundHeatStorage
 
     static final record Snapshot(int maxHeat, int currentHeat, Heat zero) {
     }
+
+    private static final record LevelPos(Level level, BlockPos pos) {
+        @Override
+        public String toString() {
+            return DebugMessages.forGlobalPos(level, pos);
+        }
+    }
+
+    private static final Map<LevelPos, BoundHeatStorage> CACHE = new MapMaker()
+            .concurrencyLevel(1)
+            .weakValues()
+            .makeMap();
 
     private final AbstractFurnaceBlockEntity target;
 
@@ -100,5 +117,9 @@ public class BoundHeatStorage
             this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
             BlockEntityAccessor.invokeSetChanged(this.target.level, this.target.worldPosition, state);
         }
+    }
+
+    static final BoundHeatStorage of(Level level, BlockPos pos, AbstractFurnaceBlockEntity entity) {
+        return CACHE.computeIfAbsent(new LevelPos(level, pos), key -> new BoundHeatStorage(entity));
     }
 }
