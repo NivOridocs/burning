@@ -6,6 +6,7 @@ import java.util.Map;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.heatlib.api.Heat;
@@ -48,10 +49,14 @@ public final class DynamicHeatStorage<T extends BlockEntity>
         FieldExtra.setInt(this.factory.litDuration, this.target, value);
     }
 
+    private int getBurnDuration(ItemStack stack) {
+        return Heat.defaultBurnDuration(stack);
+    }
+
     @Override
     public Heat insert(Heat heat, TransactionContext transaction) {
-        int value = heat.intValue();
-        int fuelTime = heat.getBurnDuration();
+        int value = heat.intValue(this::getBurnDuration);
+        int fuelTime = heat.getBurnDuration(this::getBurnDuration);
         int currentHeat = currentHeat();
         int maxHeat = maxHeat();
         int delta = Math.min(Math.max(maxHeat, fuelTime) - currentHeat, value);
@@ -62,14 +67,14 @@ public final class DynamicHeatStorage<T extends BlockEntity>
             maxHeat(fuelTime);
             this.zero = heat.zero();
         }
-        return heat.withValue(value - delta);
+        return heat.withValue(value - delta, this::getBurnDuration);
     }
 
     @Override
     public Heat extract(Heat heat, TransactionContext transaction) {
         int currentHeat = currentHeat();
-        int value = Math.min(currentHeat, heat.intValue());
-        int fuelTime = heat.getBurnDuration();
+        int value = Math.min(currentHeat, heat.intValue(this::getBurnDuration));
+        int fuelTime = heat.getBurnDuration(this::getBurnDuration);
         updateSnapshots(transaction);
         currentHeat -= value;
         currentHeat(currentHeat);
@@ -77,20 +82,25 @@ public final class DynamicHeatStorage<T extends BlockEntity>
             maxHeat(fuelTime);
             this.zero = heat.zero();
         }
-        return heat.withValue(value);
+        return heat.withValue(value, this::getBurnDuration);
     }
 
     @Override
     public Heat getCurrentHeat() {
-        var maxHeat = maxHeat();
-        if (maxHeat != zero.getBurnDuration()) {
+        if (maxHeat() != zero.getBurnDuration(this::getBurnDuration)) {
+            var value = multiplyByLava(maxHeat());
             this.zero = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                    .filter(entry -> entry.getValue() == maxHeat)
+                    .filter(entry -> entry.getValue() == value)
                     .map(Map.Entry::getKey).findFirst()
                     .flatMap(Heat::of).orElseGet(Heat::getMaxHeat)
                     .zero();
         }
         return zero.withValue(currentHeat());
+    }
+
+    private int multiplyByLava(int value) {
+        return value * Heat.getMaxHeat().getBurnDuration()
+                / Heat.getMaxHeat().getBurnDuration(this::getBurnDuration);
     }
 
     @Override
