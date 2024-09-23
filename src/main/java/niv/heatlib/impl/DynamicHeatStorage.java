@@ -1,52 +1,68 @@
-package niv.heatlib.impl.dynamic;
+package niv.heatlib.impl;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT;
 
 import java.util.Map;
 
+import com.google.common.collect.MapMaker;
+
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
+import net.fabricmc.fabric.impl.transfer.DebugMessages;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.heatlib.api.Heat;
 import niv.heatlib.api.HeatStorage;
-import niv.heatlib.impl.mixin.BlockEntityAccessor;
 import niv.heatlib.impl.util.FieldExtra;
 
-public final class DynamicHeatStorage<T extends BlockEntity>
+public final class DynamicHeatStorage
         extends SnapshotParticipant<DynamicHeatStorage.Snapshot>
         implements HeatStorage {
 
     static final record Snapshot(double maxHeat, double currentHeat, Heat zero) {
     }
 
-    private final DynamicHeatStorageFactory<T> factory;
+    private static final record LevelPos(Level level, BlockPos pos) {
+        @Override
+        public String toString() {
+            return DebugMessages.forGlobalPos(level, pos);
+        }
+    }
 
-    private final T target;
+    private static final Map<LevelPos, DynamicHeatStorage> CACHE = new MapMaker()
+            .concurrencyLevel(1)
+            .weakValues()
+            .makeMap();
+
+    private final DynamicHeatStorageProvider provider;
+
+    private final BlockEntity target;
 
     private Heat zero;
 
-    DynamicHeatStorage(DynamicHeatStorageFactory<T> factory, T target) {
-        this.factory = factory;
+    DynamicHeatStorage(DynamicHeatStorageProvider provider, BlockEntity target) {
+        this.provider = provider;
         this.target = target;
         this.zero = Heat.getMaxHeat().zero();
     }
 
     private double currentHeat() {
-        return FieldExtra.getInt(this.factory.litTime, this.target);
+        return FieldExtra.getInt(this.provider.litTime, this.target);
     }
 
     private void currentHeat(double value) {
-        FieldExtra.setInt(this.factory.litTime, this.target, (int) value);
+        FieldExtra.setInt(this.provider.litTime, this.target, (int) value);
     }
 
     private double maxHeat() {
-        return FieldExtra.getInt(this.factory.litDuration, this.target);
+        return FieldExtra.getInt(this.provider.litDuration, this.target);
     }
 
     private void maxHeat(double value) {
-        FieldExtra.setInt(this.factory.litDuration, this.target, (int) value);
+        FieldExtra.setInt(this.provider.litDuration, this.target, (int) value);
     }
 
     private int getBurnDuration(ItemStack stack) {
@@ -123,7 +139,12 @@ public final class DynamicHeatStorage<T extends BlockEntity>
         if (wasBurning != isBurning) {
             state = state.setValue(LIT, isBurning);
             this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
-            BlockEntityAccessor.invokeSetChanged(this.target.level, this.target.worldPosition, state);
+            BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
         }
+    }
+
+    static final HeatStorage of(Level level, BlockPos pos,
+            DynamicHeatStorageProvider provider, BlockEntity entity) {
+        return CACHE.computeIfAbsent(new LevelPos(level, pos), key -> new DynamicHeatStorage(provider, entity));
     }
 }
