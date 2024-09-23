@@ -24,6 +24,10 @@ import niv.heatlib.api.event.HeatStorageLifecycleEvents;
 @ApiStatus.Internal
 public final class HeatLibRegistrar implements ServerStarting {
 
+    private static interface PutIfAbsent extends
+            BiFunction<Block, BlockApiProvider<HeatStorage, @Nullable Direction>, BlockApiProvider<HeatStorage, @Nullable Direction>> {
+    }
+
     HeatLibRegistrar() {
     }
 
@@ -35,8 +39,7 @@ public final class HeatLibRegistrar implements ServerStarting {
         map.forEach((block, provider) -> HeatStorage.SIDED.registerForBlocks(provider, block));
     }
 
-    private void addAbstractFurnaceHeatStorages(RegistryAccess registries,
-            BiFunction<Block, BlockApiProvider<HeatStorage, @Nullable Direction>, BlockApiProvider<HeatStorage, @Nullable Direction>> function) {
+    private void addAbstractFurnaceHeatStorages(RegistryAccess registries, PutIfAbsent function) {
         registries.registryOrThrow(Registries.BLOCK).stream()
                 .filter(this::isAbsent)
                 .filter(this::byEntity)
