@@ -16,7 +16,7 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "niv.heatlib.impl.HeatLib"
+            "niv.heatlib.impl.HeatLibImpl::initialize"
         ],
         "fabric-gametest": [
             "niv.heatlib.gametest.GameTestHeatStorageBinder"
