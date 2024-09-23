@@ -18,20 +18,17 @@ repositories {
 	// for more information about repositories.
 }
 
-fabricApi {
-	configureDataGeneration()
-}
-
 loom {
 	accessWidenerPath = file("src/main/resources/heatlib.accessWidener")
 
 	runs {
-		gametest {
+		testServer {
 			server()
-			name "Game Test"
+			name "Test Server"
 			vmArg "-Dfabric-api.gametest"
 			vmArg "-Dfabric-api.gametest.report-file=${project.buildDir}/junit.xml"
-			runDir "build/gametest"
+			runDir "run/testServer"
+			source sourceSets.test
 		}
 	}
 }

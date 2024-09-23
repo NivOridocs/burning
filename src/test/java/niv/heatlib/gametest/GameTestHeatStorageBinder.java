@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heatlib.api.Heat;
 import niv.heatlib.api.HeatStorage;
 
-public class HeatStorageBinderTests {
+public class GameTestHeatStorageBinder {
 
     private static final BlockPos POS = new BlockPos(0, 1, 0);
 
