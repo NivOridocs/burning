@@ -7,3 +7,5 @@ accessible   method   net/minecraft/world/level/block/entity/AbstractFurnaceBloc
 
 accessible   field    net/minecraft/world/level/block/entity/BlockEntity                  level             Lnet/minecraft/world/level/Level;
 accessible   field    net/minecraft/world/level/block/entity/BlockEntity                  worldPosition     Lnet/minecraft/core/BlockPos;
+
+accessible   method   net/minecraft/world/level/block/entity/BlockEntity                  setChanged        (Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V

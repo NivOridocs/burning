@@ -17,8 +17,8 @@ public final class HeatStorageLifecycleEvents {
     private HeatStorageLifecycleEvents() {
     }
 
-    public static final Event<HeatStorageBinding> HEAT_STORAGE_BINDING = EventFactory.createArrayBacked(
-            HeatStorageBinding.class,
+    public static final Event<HeatStorageRegistering> HEAT_STORAGE_REGISTERING = EventFactory.createArrayBacked(
+            HeatStorageRegistering.class,
             listeners -> (server, map) -> {
                 for (var listener : listeners) {
                     listener.accept(server, map);
@@ -26,7 +26,7 @@ public final class HeatStorageLifecycleEvents {
             });
 
     @FunctionalInterface
-    public interface HeatStorageBinding
+    public interface HeatStorageRegistering
             extends BiConsumer<MinecraftServer, Map<Block, BlockApiProvider<HeatStorage, @Nullable Direction>>> {
     }
 }

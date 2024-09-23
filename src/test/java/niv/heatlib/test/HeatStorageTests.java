@@ -13,7 +13,7 @@ import net.minecraft.world.item.Items;
 import niv.heatlib.api.Heat;
 import niv.heatlib.api.HeatStorage;
 import niv.heatlib.api.base.SimpleHeatStorage;
-import niv.heatlib.impl.event.BoundHeatStorages;
+import niv.heatlib.impl.AbstractFurnaceHeatStorages;
 
 class HeatStorageTests {
 
@@ -37,9 +37,9 @@ class HeatStorageTests {
 
     @Test
     void testBoundHeatStorage() {
-        testHeatStorage(BoundHeatStorages.newFurnaceInstance());
-        testHeatStorage(BoundHeatStorages.newBlastFurnaceInstance());
-        testHeatStorage(BoundHeatStorages.newSmokerInstance());
+        testHeatStorage(AbstractFurnaceHeatStorages.newFurnaceInstance());
+        testHeatStorage(AbstractFurnaceHeatStorages.newBlastFurnaceInstance());
+        testHeatStorage(AbstractFurnaceHeatStorages.newSmokerInstance());
     }
 
     private void testHeatStorage(HeatStorage storage) {

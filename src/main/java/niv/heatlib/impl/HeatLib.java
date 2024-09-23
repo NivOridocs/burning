@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import niv.heatlib.impl.event.HeatStorageBinder;
 
 @ApiStatus.Internal
 public class HeatLib implements ModInitializer {
@@ -16,6 +15,6 @@ public class HeatLib implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ServerLifecycleEvents.SERVER_STARTING.register(new HeatStorageBinder());
+        ServerLifecycleEvents.SERVER_STARTING.register(new HeatLibRegistrar());
     }
 }

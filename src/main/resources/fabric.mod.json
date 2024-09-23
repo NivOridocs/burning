@@ -23,9 +23,6 @@
         ]
     },
     "accessWidener" : "heatlib.accessWidener",
-    "mixins": [
-        "heatlib.mixins.json"
-    ],
     "depends": {
         "fabricloader": ">=0.16.5",
         "minecraft": "~1.21",

@@ -1,4 +1,4 @@
-package niv.heatlib.impl.event;
+package niv.heatlib.impl;
 
 import java.util.Map;
 
@@ -10,16 +10,18 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.fabricmc.fabric.impl.transfer.DebugMessages;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.heatlib.api.Heat;
 import niv.heatlib.api.HeatStorage;
-import niv.heatlib.impl.mixin.BlockEntityAccessor;
 
 @ApiStatus.Internal
-public class BoundHeatStorage
-        extends SnapshotParticipant<BoundHeatStorage.Snapshot>
+public class AbstractFurnaceHeatStorage
+        extends SnapshotParticipant<AbstractFurnaceHeatStorage.Snapshot>
         implements HeatStorage {
 
     static final record Snapshot(int maxHeat, int currentHeat, Heat zero) {
@@ -32,7 +34,7 @@ public class BoundHeatStorage
         }
     }
 
-    private static final Map<LevelPos, BoundHeatStorage> CACHE = new MapMaker()
+    private static final Map<LevelPos, AbstractFurnaceHeatStorage> CACHE = new MapMaker()
             .concurrencyLevel(1)
             .weakValues()
             .makeMap();
@@ -41,7 +43,7 @@ public class BoundHeatStorage
 
     private Heat zero;
 
-    BoundHeatStorage(AbstractFurnaceBlockEntity target) {
+    AbstractFurnaceHeatStorage(AbstractFurnaceBlockEntity target) {
         this.target = target;
         this.zero = Heat.getMaxHeat().zero();
     }
@@ -115,11 +117,17 @@ public class BoundHeatStorage
         if (wasBurning != isBurning) {
             state = state.setValue(BlockStateProperties.LIT, isBurning);
             this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
-            BlockEntityAccessor.invokeSetChanged(this.target.level, this.target.worldPosition, state);
+            BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
         }
     }
 
-    static final BoundHeatStorage of(Level level, BlockPos pos, AbstractFurnaceBlockEntity entity) {
-        return CACHE.computeIfAbsent(new LevelPos(level, pos), key -> new BoundHeatStorage(entity));
+    @SuppressWarnings("java:S1172")
+    static final HeatStorage find(
+            Level level, BlockPos pos, BlockState state, BlockEntity blockEntity, Direction direction) {
+        if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
+            return CACHE.computeIfAbsent(new LevelPos(level, pos), key -> new AbstractFurnaceHeatStorage(entity));
+        } else {
+            return null;
+        }
     }
 }
