@@ -34,7 +34,7 @@ public class HeatStorageBinder implements ServerStarting {
     @Override
     public void onServerStarting(MinecraftServer server) {
         var map = loadMap(server.registryAccess());
-        HeatStorageLifecycleEvents.HEAT_STORAGE_BINDING.invoker().accept(ImmutableMap.copyOf(map));
+        HeatStorageLifecycleEvents.HEAT_STORAGE_BINDING.invoker().accept(server, ImmutableMap.copyOf(map));
         map.forEach((block, provider) -> HeatStorage.SIDED.registerForBlocks(provider, block));
     }
 
