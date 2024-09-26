@@ -1,21 +1,21 @@
-package niv.heatlib.impl;
+package niv.burning.impl;
 
 import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
 @ApiStatus.Internal
-public final class HeatLibImpl {
+public final class BurningImpl {
 
     public static final String MOD_ID;
 
     static {
-        MOD_ID = "heatlib";
+        MOD_ID = "burning";
 
-        ServerLifecycleEvents.SERVER_STARTING.register(new HeatLibRegistrar());
+        ServerLifecycleEvents.SERVER_STARTING.register(new BurningRegistrar());
     }
 
-    HeatLibImpl() {
+    BurningImpl() {
     }
 
     public static final void initialize() {

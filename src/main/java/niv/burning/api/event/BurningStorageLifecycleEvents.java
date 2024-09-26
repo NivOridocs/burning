@@ -1,4 +1,4 @@
-package niv.heatlib.api.event;
+package niv.burning.api.event;
 
 import java.util.Map;
 
@@ -11,14 +11,14 @@ import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Block;
-import niv.heatlib.api.HeatStorage;
+import niv.burning.api.BurningStorage;
 
-public final class HeatStorageLifecycleEvents {
-    private HeatStorageLifecycleEvents() {
+public final class BurningStorageLifecycleEvents {
+    private BurningStorageLifecycleEvents() {
     }
 
-    public static final Event<HeatStorageRegistering> HEAT_STORAGE_REGISTERING = EventFactory.createArrayBacked(
-            HeatStorageRegistering.class,
+    public static final Event<BurningStorageRegistering> BURNING_STORAGE_REGISTERING = EventFactory.createArrayBacked(
+            BurningStorageRegistering.class,
             listeners -> (server, map) -> {
                 for (var listener : listeners) {
                     listener.accept(server, map);
@@ -26,7 +26,7 @@ public final class HeatStorageLifecycleEvents {
             });
 
     @FunctionalInterface
-    public interface HeatStorageRegistering
-            extends BiConsumer<MinecraftServer, Map<Block, BlockApiProvider<HeatStorage, @Nullable Direction>>> {
+    public interface BurningStorageRegistering
+            extends BiConsumer<MinecraftServer, Map<Block, BlockApiProvider<BurningStorage, @Nullable Direction>>> {
     }
 }

@@ -1,8 +1,8 @@
 {
     "schemaVersion": 1,
-    "id": "heatlib",
+    "id": "burning",
     "version": "${version}",
-    "name": "HeatLib",
+    "name": "Burning",
     "description": "TODO",
     "authors": [
         "Niv Oridocs"
@@ -12,17 +12,17 @@
         "sources": "TODO"
     },
     "license": "MIT",
-    "icon": "assets/heatlib/icon.png",
+    "icon": "assets/burning/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "niv.heatlib.impl.HeatLibImpl::initialize"
+            "niv.burning.impl.BurningImpl::initialize"
         ],
         "fabric-gametest": [
-            "niv.heatlib.gametest.GameTestHeatStorageBinder"
+            "niv.burning.gametest.GameTestBurningRegistrar"
         ]
     },
-    "accessWidener" : "heatlib.accessWidener",
+    "accessWidener" : "burning.accessWidener",
     "depends": {
         "fabricloader": ">=0.16.5",
         "minecraft": "~1.21",

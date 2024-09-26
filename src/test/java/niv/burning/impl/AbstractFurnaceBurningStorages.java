@@ -1,4 +1,4 @@
-package niv.heatlib.impl;
+package niv.burning.impl;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
@@ -6,24 +6,24 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
-public class AbstractFurnaceHeatStorages {
-    private AbstractFurnaceHeatStorages() {
+public class AbstractFurnaceBurningStorages {
+    private AbstractFurnaceBurningStorages() {
     }
 
-    public static AbstractFurnaceHeatStorage newFurnaceInstance() {
+    public static AbstractFurnaceBurningStorage newFurnaceInstance() {
         return newInstance(BlockEntityType.FURNACE, Blocks.FURNACE);
     }
 
-    public static AbstractFurnaceHeatStorage newBlastFurnaceInstance() {
+    public static AbstractFurnaceBurningStorage newBlastFurnaceInstance() {
         return newInstance(BlockEntityType.BLAST_FURNACE, Blocks.BLAST_FURNACE);
     }
 
-    public static AbstractFurnaceHeatStorage newSmokerInstance() {
+    public static AbstractFurnaceBurningStorage newSmokerInstance() {
         return newInstance(BlockEntityType.SMOKER, Blocks.SMOKER);
     }
 
-    private static <T extends AbstractFurnaceBlockEntity> AbstractFurnaceHeatStorage newInstance(BlockEntityType<T> type, Block block) {
-        return new AbstractFurnaceHeatStorage(type.create(BlockPos.ZERO, block.defaultBlockState())) {
+    private static <T extends AbstractFurnaceBlockEntity> AbstractFurnaceBurningStorage newInstance(BlockEntityType<T> type, Block block) {
+        return new AbstractFurnaceBurningStorage(type.create(BlockPos.ZERO, block.defaultBlockState())) {
             @Override
             protected void onFinalCommit() {
                 // no-op

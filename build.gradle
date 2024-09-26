@@ -19,7 +19,7 @@ repositories {
 }
 
 loom {
-	accessWidenerPath = file("src/main/resources/heatlib.accessWidener")
+	accessWidenerPath = file("src/main/resources/burning.accessWidener")
 
 	runs {
 		testServer {

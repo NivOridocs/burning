@@ -1,4 +1,4 @@
-package niv.heatlib.impl;
+package niv.burning.impl;
 
 import java.util.HashMap;
 import java.util.function.BiFunction;
@@ -18,32 +18,32 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import niv.heatlib.api.HeatStorage;
-import niv.heatlib.api.event.HeatStorageLifecycleEvents;
+import niv.burning.api.BurningStorage;
+import niv.burning.api.event.BurningStorageLifecycleEvents;
 
 @ApiStatus.Internal
-public final class HeatLibRegistrar implements ServerStarting {
+public final class BurningRegistrar implements ServerStarting {
 
     private static interface PutIfAbsent extends
-            BiFunction<Block, BlockApiProvider<HeatStorage, @Nullable Direction>, BlockApiProvider<HeatStorage, @Nullable Direction>> {
+            BiFunction<Block, BlockApiProvider<BurningStorage, @Nullable Direction>, BlockApiProvider<BurningStorage, @Nullable Direction>> {
     }
 
-    HeatLibRegistrar() {
+    BurningRegistrar() {
     }
 
     @Override
     public void onServerStarting(MinecraftServer server) {
-        var map = new HashMap<Block, BlockApiProvider<HeatStorage, @Nullable Direction>>();
-        addAbstractFurnaceHeatStorages(server.registryAccess(), map::putIfAbsent);
-        HeatStorageLifecycleEvents.HEAT_STORAGE_REGISTERING.invoker().accept(server, ImmutableMap.copyOf(map));
-        map.forEach((block, provider) -> HeatStorage.SIDED.registerForBlocks(provider, block));
+        var map = new HashMap<Block, BlockApiProvider<BurningStorage, @Nullable Direction>>();
+        addAbstractFurnaceBurningStorages(server.registryAccess(), map::putIfAbsent);
+        BurningStorageLifecycleEvents.BURNING_STORAGE_REGISTERING.invoker().accept(server, ImmutableMap.copyOf(map));
+        map.forEach((block, provider) -> BurningStorage.SIDED.registerForBlocks(provider, block));
     }
 
-    private void addAbstractFurnaceHeatStorages(RegistryAccess registries, PutIfAbsent function) {
+    private void addAbstractFurnaceBurningStorages(RegistryAccess registries, PutIfAbsent function) {
         registries.registryOrThrow(Registries.BLOCK).stream()
                 .filter(this::isAbsent)
                 .filter(this::byEntity)
-                .forEach(block -> function.apply(block, AbstractFurnaceHeatStorage::find));
+                .forEach(block -> function.apply(block, AbstractFurnaceBurningStorage::find));
     }
 
     private boolean byEntity(Block block) {
@@ -56,6 +56,6 @@ public final class HeatLibRegistrar implements ServerStarting {
     }
 
     private boolean isAbsent(Block block) {
-        return HeatStorage.SIDED.getProvider(block) == null;
+        return BurningStorage.SIDED.getProvider(block) == null;
     }
 }
