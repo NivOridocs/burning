@@ -31,7 +31,7 @@ class BurningStorageTests {
     }
 
     @Test
-    void testBoundBurningStorage() {
+    void testAbstractFurnaceBurningStorage() {
         testBurningStorage(AbstractFurnaceBurningStorages.newFurnaceInstance());
         testBurningStorage(AbstractFurnaceBurningStorages.newBlastFurnaceInstance());
         testBurningStorage(AbstractFurnaceBurningStorages.newSmokerInstance());
