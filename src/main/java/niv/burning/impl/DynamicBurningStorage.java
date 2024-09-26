@@ -12,7 +12,6 @@ import net.fabricmc.fabric.impl.transfer.DebugMessages;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
@@ -46,7 +45,7 @@ public final class DynamicBurningStorage
     DynamicBurningStorage(DynamicBurningStorageProvider provider, BlockEntity target) {
         this.provider = provider;
         this.target = target;
-        this.zero = Burning.getMaxBurning().zero();
+        this.zero = Burning.MIN_VALUE;
     }
 
     private double burning() {
@@ -103,20 +102,11 @@ public final class DynamicBurningStorage
 
     @Override
     public Burning getBurning() {
-        if (maxBurning() != zero.getBurnDuration(this::getBurnDuration)) {
-            var value = multiplyByLava(maxBurning());
-            this.zero = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                    .filter(entry -> entry.getValue() == value)
-                    .map(Map.Entry::getKey).findFirst()
-                    .flatMap(Burning::of).orElseGet(Burning::getMaxBurning)
-                    .zero();
+        double burning = burning();
+        if (burning > zero.getBurnDuration(this::getBurnDuration)) {
+            this.zero = Burning.MIN_VALUE;
         }
-        return zero.withValue((int) burning());
-    }
-
-    private double multiplyByLava(double value) {
-        return value * Burning.getMaxBurning().getBurnDuration()
-                / Burning.getMaxBurning().getBurnDuration(this::getBurnDuration);
+        return zero.withValue((int) burning);
     }
 
     @Override
