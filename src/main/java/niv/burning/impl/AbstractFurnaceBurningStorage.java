@@ -18,14 +18,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.base.SimpleBurningStorage.Snapshot;
 
 @ApiStatus.Internal
 public class AbstractFurnaceBurningStorage
-        extends SnapshotParticipant<AbstractFurnaceBurningStorage.Snapshot>
+        extends SnapshotParticipant<Snapshot>
         implements BurningStorage {
-
-    static final record Snapshot(int burning, int maxBurning, Burning zero) {
-    }
 
     private static final record LevelPos(Level level, BlockPos pos) {
         @Override

@@ -75,8 +75,8 @@ public class SimpleBurningStorage
 
     @Override
     protected void readSnapshot(Snapshot snapshot) {
-        this.burning = snapshot.maxBurning;
-        this.maxBurning = snapshot.burning;
+        this.burning = snapshot.burning;
+        this.maxBurning = snapshot.maxBurning;
         this.zero = snapshot.zero;
     }
 }
