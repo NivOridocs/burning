@@ -1,6 +1,5 @@
 package niv.burning.impl;
 
-import java.lang.reflect.Field;
 import java.util.Optional;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -38,11 +37,11 @@ public final class DynamicBurningStorageProvider implements BlockApiProvider<Bur
 
     final BlockEntityType<?> type;
 
-    final Field litTime;
+    final DynamicField litTime;
 
-    final Field litDuration;
+    final DynamicField litDuration;
 
-    private DynamicBurningStorageProvider(BlockEntityType<?> type, Field litTime, Field litDuration) {
+    private DynamicBurningStorageProvider(BlockEntityType<?> type, DynamicField litTime, DynamicField litDuration) {
         this.type = type;
         this.litTime = litTime;
         this.litDuration = litDuration;
@@ -68,10 +67,12 @@ public final class DynamicBurningStorageProvider implements BlockApiProvider<Bur
                 .orElse(null);
         if (clazz != null) {
             var litTimeField = Optional.ofNullable(FieldUtils
-                    .getField(clazz, litTime, true));
+                    .getField(clazz, litTime, true))
+                    .flatMap(DynamicField::of);
 
             var litDurationField = Optional.ofNullable(FieldUtils
-                    .getField(clazz, litDuration, true));
+                    .getField(clazz, litDuration, true))
+                    .flatMap(DynamicField::of);
 
             if (litTimeField.isPresent() && litDurationField.isPresent()) {
                 return new DynamicBurningStorageProvider(type, litTimeField.get(), litDurationField.get());

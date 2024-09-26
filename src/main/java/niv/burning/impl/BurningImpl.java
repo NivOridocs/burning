@@ -3,6 +3,7 @@ package niv.burning.impl;
 import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 
 @ApiStatus.Internal
 public final class BurningImpl {
@@ -13,6 +14,7 @@ public final class BurningImpl {
         MOD_ID = "burning";
 
         ServerLifecycleEvents.SERVER_STARTING.register(new BurningRegistrar());
+        DynamicRegistries.register(DynamicBurningStorageProvider.REGISTRY, DynamicBurningStorageProvider.CODEC);
     }
 
     BurningImpl() {

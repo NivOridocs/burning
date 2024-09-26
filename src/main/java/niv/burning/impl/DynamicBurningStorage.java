@@ -15,7 +15,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
-import niv.burning.impl.util.FieldExtra;
 
 public class DynamicBurningStorage
         extends SnapshotParticipant<DynamicBurningStorage.Snapshot>
@@ -49,19 +48,21 @@ public class DynamicBurningStorage
     }
 
     private double burning() {
-        return FieldExtra.getInt(this.provider.litTime, this.target);
+        return this.provider.litTime.get(target);
     }
 
+    @SuppressWarnings("java:S3011")
     private void burning(double value) {
-        FieldExtra.setInt(this.provider.litTime, this.target, (int) value);
+        this.provider.litTime.set(target, value);
     }
 
     private double maxBurning() {
-        return FieldExtra.getInt(this.provider.litDuration, this.target);
+        return this.provider.litDuration.get(target);
     }
 
+    @SuppressWarnings("java:S3011")
     private void maxBurning(double value) {
-        FieldExtra.setInt(this.provider.litDuration, this.target, (int) value);
+        this.provider.litDuration.set(target, value);
     }
 
     private int getBurnDuration(ItemStack stack) {
