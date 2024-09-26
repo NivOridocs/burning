@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
 import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -21,7 +22,6 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.event.BurningStorageLifecycleEvents;
-import niv.heatlib.impl.DynamicHeatStorageProvider;
 
 @ApiStatus.Internal
 public final class BurningRegistrar implements ServerStarting {
@@ -37,7 +37,7 @@ public final class BurningRegistrar implements ServerStarting {
     public void onServerStarting(MinecraftServer server) {
         var map = new HashMap<Block, BlockApiProvider<BurningStorage, @Nullable Direction>>();
         addAbstractFurnaceBurningStorages(server.registryAccess(), map::putIfAbsent);
-        addDynamicHeatStorages(server.registryAccess(), map::putIfAbsent);
+        addDynamicBurningStorages(server.registryAccess(), map::putIfAbsent);
         BurningStorageLifecycleEvents.BURNING_STORAGE_REGISTERING.invoker().accept(server, ImmutableMap.copyOf(map));
         map.forEach((block, provider) -> BurningStorage.SIDED.registerForBlocks(provider, block));
     }
@@ -58,12 +58,13 @@ public final class BurningRegistrar implements ServerStarting {
         }
     }
 
-    private void addDynamicHeatStorages(RegistryAccess registries, PutIfAbsent function) {
-        registries.registryOrThrow(DynamicHeatStorageProvider.REGISTRY).stream()
-                .forEach(provider -> this.addDynamicHeatStorage(provider, function));
+    private void addDynamicBurningStorages(RegistryAccess registries, PutIfAbsent function) {
+        registries.registry(DynamicBurningStorageProvider.REGISTRY).stream()
+                .flatMap(Registry::stream)
+                .forEach(provider -> this.addDynamicBurningStorage(provider, function));
     }
 
-    private void addDynamicHeatStorage(DynamicHeatStorageProvider provider, PutIfAbsent function) {
+    private void addDynamicBurningStorage(DynamicBurningStorageProvider provider, PutIfAbsent function) {
         ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
                 .filter(this::isAbsent)
                 .forEach(block -> function.apply(block, provider));

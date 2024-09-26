@@ -1,4 +1,4 @@
-package niv.heatlib.impl;
+package niv.burning.impl;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
@@ -22,18 +22,19 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import niv.heatlib.api.HeatStorage;
+import niv.burning.api.BurningStorage;
 
-public final class DynamicHeatStorageProvider implements BlockApiProvider<HeatStorage, @Nullable Direction> {
+public final class DynamicBurningStorageProvider implements BlockApiProvider<BurningStorage, @Nullable Direction> {
 
-    public static final ResourceKey<Registry<DynamicHeatStorageProvider>> REGISTRY = ResourceKey
-            .createRegistryKey(ResourceLocation.tryBuild(HeatLibImpl.MOD_ID, "heat_storage"));
+    public static final ResourceKey<Registry<DynamicBurningStorageProvider>> REGISTRY = ResourceKey
+            .createRegistryKey(ResourceLocation.tryBuild(BurningImpl.MOD_ID, "burning_storage"));
 
-    public static final Codec<DynamicHeatStorageProvider> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            BuiltInRegistries.BLOCK_ENTITY_TYPE.byNameCodec().fieldOf("type").forGetter(src -> src.type),
-            Codec.STRING.fieldOf("lit_time").forGetter(src -> src.litTime.getName()),
-            Codec.STRING.fieldOf("lit_duration").forGetter(src -> src.litDuration.getName()))
-            .apply(instance, DynamicHeatStorageProvider::from));
+    public static final Codec<DynamicBurningStorageProvider> CODEC = RecordCodecBuilder.create(instance -> instance
+            .group(
+                    BuiltInRegistries.BLOCK_ENTITY_TYPE.byNameCodec().fieldOf("type").forGetter(src -> src.type),
+                    Codec.STRING.fieldOf("lit_time").forGetter(src -> src.litTime.getName()),
+                    Codec.STRING.fieldOf("lit_duration").forGetter(src -> src.litDuration.getName()))
+            .apply(instance, DynamicBurningStorageProvider::from));
 
     final BlockEntityType<?> type;
 
@@ -41,24 +42,25 @@ public final class DynamicHeatStorageProvider implements BlockApiProvider<HeatSt
 
     final Field litDuration;
 
-    private DynamicHeatStorageProvider(BlockEntityType<?> type, Field litTime, Field litDuration) {
+    private DynamicBurningStorageProvider(BlockEntityType<?> type, Field litTime, Field litDuration) {
         this.type = type;
         this.litTime = litTime;
         this.litDuration = litDuration;
     }
 
     @Override
-    public @Nullable HeatStorage find(
+    public @Nullable BurningStorage find(
             Level level, BlockPos pos, BlockState state,
             @Nullable BlockEntity blockEntity, @Nullable Direction context) {
         if (blockEntity != null && this.type == blockEntity.getType()) {
-            return DynamicHeatStorage.of(level, pos, this, blockEntity);
+            return DynamicBurningStorage.of(level, pos, this, blockEntity);
         } else {
             return null;
         }
     }
 
-    private static final DynamicHeatStorageProvider from(BlockEntityType<?> type, String litTime, String litDuration) {
+    private static final DynamicBurningStorageProvider from(BlockEntityType<?> type,
+            String litTime, String litDuration) {
         Class<?> clazz = ((BlockEntityTypeAccessor) type).getBlocks()
                 .stream().findAny()
                 .map(Block::defaultBlockState)
@@ -72,7 +74,7 @@ public final class DynamicHeatStorageProvider implements BlockApiProvider<HeatSt
                     .getField(clazz, litDuration, true));
 
             if (litTimeField.isPresent() && litDurationField.isPresent()) {
-                return new DynamicHeatStorageProvider(type, litTimeField.get(), litDurationField.get());
+                return new DynamicBurningStorageProvider(type, litTimeField.get(), litDurationField.get());
             }
         }
         return null;
