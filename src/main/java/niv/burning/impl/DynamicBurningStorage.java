@@ -17,7 +17,7 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 import niv.burning.impl.util.FieldExtra;
 
-public final class DynamicBurningStorage
+public class DynamicBurningStorage
         extends SnapshotParticipant<DynamicBurningStorage.Snapshot>
         implements BurningStorage {
 

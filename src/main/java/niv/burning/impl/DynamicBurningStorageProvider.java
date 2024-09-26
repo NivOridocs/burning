@@ -59,7 +59,7 @@ public final class DynamicBurningStorageProvider implements BlockApiProvider<Bur
         }
     }
 
-    private static final DynamicBurningStorageProvider from(BlockEntityType<?> type,
+    static final DynamicBurningStorageProvider from(BlockEntityType<?> type,
             String litTime, String litDuration) {
         Class<?> clazz = ((BlockEntityTypeAccessor) type).getBlocks()
                 .stream().findAny()

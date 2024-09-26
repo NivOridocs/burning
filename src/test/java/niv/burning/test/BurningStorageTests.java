@@ -3,6 +3,7 @@ package niv.burning.test;
 import static niv.burning.api.Burning.BLAZE_ROD;
 import static niv.burning.api.Burning.COAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -11,10 +12,14 @@ import org.junit.jupiter.api.Test;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.level.block.Blocks;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.impl.AbstractFurnaceBurningStorages;
+import niv.burning.impl.DynamicBurningStorageProvider;
+import niv.burning.impl.DynamicBurningStorageProviders;
+import niv.burning.impl.DynamicBurningStorages;
 
 class BurningStorageTests {
 
@@ -35,6 +40,23 @@ class BurningStorageTests {
         testBurningStorage(AbstractFurnaceBurningStorages.newFurnaceInstance());
         testBurningStorage(AbstractFurnaceBurningStorages.newBlastFurnaceInstance());
         testBurningStorage(AbstractFurnaceBurningStorages.newSmokerInstance());
+    }
+
+    @Test
+    void testDynamicBurningStorage() {
+        DynamicBurningStorageProvider provider;
+
+        provider = DynamicBurningStorageProviders.newFurnaceInstance();
+        assertNotNull(provider);
+        testBurningStorage(DynamicBurningStorages.newInstance(provider, Blocks.FURNACE));
+
+        provider = DynamicBurningStorageProviders.newBlastFurnaceInstance();
+        assertNotNull(provider);
+        testBurningStorage(DynamicBurningStorages.newInstance(provider, Blocks.BLAST_FURNACE));
+
+        provider = DynamicBurningStorageProviders.newSmokerInstance();
+        assertNotNull(provider);
+        testBurningStorage(DynamicBurningStorages.newInstance(provider, Blocks.SMOKER));
     }
 
     private void testBurningStorage(BurningStorage storage) {
