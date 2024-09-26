@@ -10,8 +10,10 @@ import com.google.common.collect.ImmutableMap;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.ServerStarting;
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
+import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -35,6 +37,7 @@ public final class BurningRegistrar implements ServerStarting {
     public void onServerStarting(MinecraftServer server) {
         var map = new HashMap<Block, BlockApiProvider<BurningStorage, @Nullable Direction>>();
         addAbstractFurnaceBurningStorages(server.registryAccess(), map::putIfAbsent);
+        addDynamicBurningStorages(server.registryAccess(), map::putIfAbsent);
         BurningStorageLifecycleEvents.BURNING_STORAGE_REGISTERING.invoker().accept(server, ImmutableMap.copyOf(map));
         map.forEach((block, provider) -> BurningStorage.SIDED.registerForBlocks(provider, block));
     }
@@ -53,6 +56,18 @@ public final class BurningRegistrar implements ServerStarting {
         } else {
             return false;
         }
+    }
+
+    private void addDynamicBurningStorages(RegistryAccess registries, PutIfAbsent function) {
+        registries.registry(DynamicBurningStorageProvider.REGISTRY).stream()
+                .flatMap(Registry::stream)
+                .forEach(provider -> this.addDynamicBurningStorage(provider, function));
+    }
+
+    private void addDynamicBurningStorage(DynamicBurningStorageProvider provider, PutIfAbsent function) {
+        ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
+                .filter(this::isAbsent)
+                .forEach(block -> function.apply(block, provider));
     }
 
     private boolean isAbsent(Block block) {
