@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
@@ -42,10 +41,10 @@ public class GameTestBurningRegistrar {
         context.assertTrue(storage.getBurning().intValue() == 0,
                 "Expected 0, got " + storage.getBurning().intValue());
 
-        var burning = Burning.of(800, Items.COAL).orElseThrow();
+        final var coal8 = Burning.COAL.withValue(800);
 
         try (var transaction = Transaction.openOuter()) {
-            storage.insert(burning, transaction);
+            storage.insert(coal8, transaction);
             transaction.commit();
         }
 
@@ -54,7 +53,7 @@ public class GameTestBurningRegistrar {
         context.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.TRUE);
 
         try (var transaction = Transaction.openOuter()) {
-            storage.extract(burning.one(), transaction);
+            storage.extract(coal8.one(), transaction);
             transaction.commit();
         }
 

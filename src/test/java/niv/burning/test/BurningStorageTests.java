@@ -1,5 +1,7 @@
 package niv.burning.test;
 
+import static niv.burning.api.Burning.BLAZE_ROD;
+import static niv.burning.api.Burning.COAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
-import net.minecraft.world.item.Items;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage;
@@ -17,16 +18,10 @@ import niv.burning.impl.AbstractFurnaceBurningStorages;
 
 class BurningStorageTests {
 
-    private static Burning COAL;
-    private static Burning BLAZE_ROD;
-
     @BeforeAll
     static void setup() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
-
-        COAL = Burning.of(Items.COAL).orElseThrow();
-        BLAZE_ROD = Burning.of(Items.BLAZE_ROD).orElseThrow();
     }
 
     @Test

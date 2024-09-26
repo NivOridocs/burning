@@ -22,31 +22,20 @@ class BurningTests {
 
     @Test
     void testBurningBuilder() {
-        var burningOneOptional = Burning.of(10000, Items.LAVA_BUCKET);
+        var burningOneOptional = Burning.ofOptional(Items.LAVA_BUCKET);
         assertTrue(burningOneOptional.isPresent());
 
-        var burningOne = burningOneOptional.get();
+        var burningOne = burningOneOptional.get().withValue(10000);
         assertEquals(Items.LAVA_BUCKET, burningOne.getFuel());
         assertEquals(.5d, burningOne.getPercent());
 
-        var burningTwoOptional = Burning.of(.5d, Items.LAVA_BUCKET);
+        var burningTwoOptional = Burning.ofOptional(Items.LAVA_BUCKET, stack -> Burning.defaultBurnDuration(stack) / 2);
         assertTrue(burningTwoOptional.isPresent());
 
-        var burningTwo = burningTwoOptional.get();
+        var burningTwo = burningTwoOptional.get().withValue(5000, stack -> Burning.defaultBurnDuration(stack) / 2);
         assertEquals(Items.LAVA_BUCKET, burningTwo.getFuel());
         assertEquals(10000, burningTwo.intValue());
 
         assertTrue(Objects.equal(burningOne, burningTwo));
-        assertTrue(Objects.equal(burningTwo, burningOne));
-
-        var burningThreeOptional = Burning.of(5000, Items.LAVA_BUCKET, stack -> Burning.defaultBurnDuration(stack) / 2);
-        assertTrue(burningThreeOptional.isPresent());
-
-        var burningThree = burningThreeOptional.get();
-        assertEquals(Items.LAVA_BUCKET, burningThree.getFuel());
-        assertEquals(10000, burningThree.intValue());
-
-        assertTrue(Objects.equal(burningOne, burningThree));
-        assertTrue(Objects.equal(burningTwo, burningThree));
     }
 }

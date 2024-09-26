@@ -6,28 +6,51 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
 
+import org.jetbrains.annotations.Nullable;
+
+import com.google.common.collect.MapMaker;
+
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
-@SuppressWarnings("java:S1948")
-public final class Burning extends Number implements Comparable<Burning> {
+public final class Burning implements Comparable<Burning> {
 
-    private static final Map<Item, Burning> ZEROS = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
-    private static final Map<Item, Burning> ONES = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
+    private static final Map<Item, Burning> ZEROS;
+    private static final Map<Item, Burning> ONES;
+    private static final Map<Item, ItemStack> STACKS;
 
-    private static Item maxFuel = null;
+    public static final Burning LAVA_BUCKET;
+    public static final Burning BLAZE_ROD;
+    public static final Burning COAL;
+
+    public static final Burning MIN_VALUE;
+    public static final Burning MAX_VALUE;
+
+    static {
+        ZEROS = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
+        ONES = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
+        STACKS = new MapMaker().concurrencyLevel(1).weakValues().makeMap();
+
+        LAVA_BUCKET = of(Items.LAVA_BUCKET).one().zero();
+        BLAZE_ROD = of(Items.BLAZE_ROD).one().zero();
+        COAL = of(Items.COAL).one().zero();
+
+        MIN_VALUE = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
+                .max((a, b) -> Integer.compare(a.getValue(), b.getValue()))
+                .map(Map.Entry::getKey)
+                .flatMap(Burning::ofOptional)
+                .orElse(LAVA_BUCKET);
+        MAX_VALUE = MIN_VALUE.one();
+    }
 
     private final double percent;
     private final Item fuel;
 
-    private final transient ItemStack fuelStack;
-
     private Burning(double percent, Item fuel) {
         this.percent = percent;
         this.fuel = fuel;
-        this.fuelStack = new ItemStack(fuel);
     }
 
     public double getPercent() {
@@ -38,34 +61,26 @@ public final class Burning extends Number implements Comparable<Burning> {
         return fuel;
     }
 
-    public ItemStack getFuelStack() {
-        return fuelStack;
-    }
-
     public int getBurnDuration() {
         return defaultBurnDuration(this.fuel);
     }
 
     public int getBurnDuration(ToIntFunction<ItemStack> customBurnDuration) {
-        return customBurnDuration.applyAsInt(this.fuelStack);
+        return customBurnDuration.applyAsInt(toStack(this.fuel));
     }
 
-    @Override
     public int intValue() {
         return (int) this.doubleValue();
     }
 
-    @Override
     public long longValue() {
         return (long) this.doubleValue();
     }
 
-    @Override
     public float floatValue() {
         return (float) this.doubleValue();
     }
 
-    @Override
     public double doubleValue() {
         return this.getBurnDuration() * percent;
     }
@@ -147,7 +162,7 @@ public final class Burning extends Number implements Comparable<Burning> {
         double max;
         double x;
         if (this.percent == 0) {
-            return of(fuel).orElse(this);
+            return ofOptional(fuel).orElse(this);
         } else if ((max = defaultBurnDuration(fuel)) > 0
                 && (x = this.percent * max / getBurnDuration()) <= 1d) {
             return new Burning(x, fuel);
@@ -160,9 +175,9 @@ public final class Burning extends Number implements Comparable<Burning> {
         double max;
         double x;
         if (this.percent == 0) {
-            return of(fuel).orElse(this);
-        } else if ((max = customBurnDuration.applyAsInt(new ItemStack(fuel))) > 0
-                && (x = this.percent * max / getBurnDuration()) <= 1d) {
+            return ofOptional(fuel, customBurnDuration).orElse(this);
+        } else if ((max = customBurnDuration.applyAsInt(toStack(fuel))) > 0
+                && (x = this.percent * max / getBurnDuration(customBurnDuration)) <= 1d) {
             return new Burning(x, fuel);
         } else {
             return this;
@@ -194,55 +209,24 @@ public final class Burning extends Number implements Comparable<Burning> {
         }
     }
 
-    public static final Optional<Burning> of(Item fuel) {
-        if (AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)) {
-            return Optional.of(ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item)));
-        } else {
-            return Optional.empty();
-        }
+    public static final @Nullable Burning of(Item fuel) {
+        return AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)
+                ? ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item))
+                : null;
     }
 
-    public static final Optional<Burning> of(double percent, Item fuel) {
-        if (percent == 0) {
-            return of(fuel);
-        } else if (percent > 0 && percent <= 1 && AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)) {
-            return Optional.of(new Burning(percent, fuel));
-        } else {
-            return Optional.empty();
-        }
+    public static final @Nullable Burning of(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
+        return customBurnDuration.applyAsInt(toStack(fuel)) > 0
+                ? ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item))
+                : null;
     }
 
-    public static final Optional<Burning> of(int value, Item fuel) {
-        double max;
-        if (value == 0) {
-            return of(fuel);
-        } else if (value > 0 && (max = defaultBurnDuration(fuel)) > 0
-                && value <= max) {
-            return Optional.of(new Burning(value / max, fuel));
-        } else {
-            return Optional.empty();
-        }
+    public static final Optional<Burning> ofOptional(Item fuel) {
+        return Optional.ofNullable(of(fuel));
     }
 
-    public static final Optional<Burning> of(int value, Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
-        double max;
-        if (value == 0) {
-            return of(fuel);
-        } else if (value > 0 && (max = customBurnDuration.applyAsInt(new ItemStack(fuel))) > 0 && value <= max) {
-            return Optional.of(new Burning(value / max, fuel));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    public static final Burning getMaxBurning() {
-        if (maxFuel == null) {
-            maxFuel = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                    .max((a, b) -> Integer.compare(a.getValue(), b.getValue()))
-                    .map(Map.Entry::getKey)
-                    .orElse(Items.LAVA_BUCKET);
-        }
-        return ONES.computeIfAbsent(maxFuel, item -> new Burning(1d, item));
+    public static final Optional<Burning> ofOptional(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
+        return Optional.ofNullable(of(fuel, customBurnDuration));
     }
 
     public static final int defaultBurnDuration(ItemStack stack) {
@@ -251,5 +235,9 @@ public final class Burning extends Number implements Comparable<Burning> {
 
     public static final int defaultBurnDuration(Item item) {
         return AbstractFurnaceBlockEntity.getFuel().getOrDefault(item, 0);
+    }
+
+    private static final ItemStack toStack(Item item) {
+        return STACKS.computeIfAbsent(item, ItemStack::new);
     }
 }

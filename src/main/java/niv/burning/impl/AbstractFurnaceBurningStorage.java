@@ -33,9 +33,7 @@ public class AbstractFurnaceBurningStorage
     }
 
     private static final Map<LevelPos, AbstractFurnaceBurningStorage> CACHE = new MapMaker()
-            .concurrencyLevel(1)
-            .weakValues()
-            .makeMap();
+            .concurrencyLevel(1).weakValues().makeMap();
 
     private final AbstractFurnaceBlockEntity target;
 
@@ -43,7 +41,7 @@ public class AbstractFurnaceBurningStorage
 
     AbstractFurnaceBurningStorage(AbstractFurnaceBlockEntity target) {
         this.target = target;
-        this.zero = Burning.getMaxBurning().zero();
+        this.zero = Burning.MIN_VALUE;
     }
 
     @Override
@@ -76,20 +74,10 @@ public class AbstractFurnaceBurningStorage
 
     @Override
     public Burning getBurning() {
-        if (this.target.litDuration != zero.getBurnDuration(this.target::getBurnDuration)) {
-            int value = multiplyByLava(this.target.litDuration);
-            this.zero = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                    .filter(entry -> entry.getValue() == value)
-                    .map(Map.Entry::getKey).findFirst()
-                    .flatMap(Burning::of).orElseGet(Burning::getMaxBurning)
-                    .zero();
+        if (this.target.litTime > zero.getBurnDuration(this.target::getBurnDuration)) {
+            this.zero = Burning.MIN_VALUE;
         }
         return zero.withValue(this.target.litTime, this.target::getBurnDuration);
-    }
-
-    private int multiplyByLava(int value) {
-        return value * Burning.getMaxBurning().getBurnDuration()
-                / Burning.getMaxBurning().getBurnDuration(this.target::getBurnDuration);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class SimpleBurningStorage
         this.getBurnDuration = getBurnDuration == null ? Burning::defaultBurnDuration : getBurnDuration;
         this.burning = 0;
         this.maxBurning = 0;
-        this.zero = Burning.getMaxBurning().zero();
+        this.zero = Burning.MIN_VALUE;
     }
 
     @Override
