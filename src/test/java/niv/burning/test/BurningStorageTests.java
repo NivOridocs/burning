@@ -1,7 +1,5 @@
 package niv.burning.test;
 
-import static niv.burning.api.Burning.BLAZE_ROD;
-import static niv.burning.api.Burning.COAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,10 +62,11 @@ class BurningStorageTests {
         assertTrue(storage.supportsExtraction());
         assertEquals(0, storage.getBurning().intValue());
 
-        final var coal8 = COAL.withValue(800);
+        final var coalOne = Burning.COAL.one();
+        final var coal8 = Burning.COAL.withValue(800);
 
         try (var transaction = Transaction.openOuter()) {
-            assertEquals(COAL.zero(), storage.insert(COAL.one(), transaction));
+            assertEquals(coalOne, storage.insert(coalOne, transaction));
             assertEquals(coal8, storage.extract(coal8, transaction));
             assertEquals(coal8, storage.getBurning());
         }
@@ -75,7 +74,7 @@ class BurningStorageTests {
         assertEquals(0, storage.getBurning().intValue());
 
         try (var transaction = Transaction.openOuter()) {
-            assertEquals(COAL.zero(), storage.insert(COAL.one(), transaction));
+            assertEquals(coalOne, storage.insert(coalOne, transaction));
             assertEquals(coal8, storage.extract(coal8, transaction));
             assertEquals(coal8, storage.getBurning());
 
@@ -85,19 +84,20 @@ class BurningStorageTests {
         assertEquals(coal8, storage.getBurning());
 
         try (var transaction = Transaction.openOuter()) {
-            assertEquals(coal8, storage.insert(COAL.one(), transaction));
-            assertEquals(COAL.one(), storage.getBurning());
+            assertEquals(coal8, storage.insert(coalOne, transaction));
+            assertEquals(coalOne, storage.getBurning());
 
             transaction.commit();
         }
 
-        assertEquals(COAL.one(), storage.getBurning());
+        assertEquals(coalOne, storage.getBurning());
 
-        final var blaze10 = BLAZE_ROD.withValue(1000);
-        final var blaze12 = BLAZE_ROD.withValue(1200);
+        final var blaze6 = Burning.BLAZE_ROD.withValue(600);
+        final var blaze10 = Burning.BLAZE_ROD.withValue(1000);
+        final var blaze12 = Burning.BLAZE_ROD.withValue(1200);
 
         try (var transaction = Transaction.openOuter()) {
-            assertEquals(BLAZE_ROD.zero(), storage.insert(BLAZE_ROD.withValue(600), transaction));
+            assertEquals(blaze6, storage.insert(blaze6, transaction));
             assertEquals(blaze10, storage.extract(blaze10, transaction));
             assertEquals(blaze12, storage.getBurning());
 

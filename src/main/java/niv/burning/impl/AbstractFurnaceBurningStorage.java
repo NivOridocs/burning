@@ -46,23 +46,24 @@ public class AbstractFurnaceBurningStorage
 
     @Override
     public Burning insert(Burning burning, TransactionContext transaction) {
-        int value = burning.intValue(this.target::getBurnDuration);
         int fuelTime = burning.getBurnDuration(this.target::getBurnDuration);
-        int delta = Math.min(Math.max(this.target.litDuration, fuelTime) - this.target.litTime, value);
+        int value = Math.min(
+                Math.max(this.target.litDuration, fuelTime) - this.target.litTime,
+                burning.intValue(this.target::getBurnDuration));
         updateSnapshots(transaction);
-        this.target.litTime += delta;
+        this.target.litTime += value;
         if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
                 || this.target.litTime > this.target.litDuration) {
             this.target.litDuration = fuelTime;
             this.zero = burning.zero();
         }
-        return burning.withValue(value - delta, this.target::getBurnDuration);
+        return burning.withValue(value, this.target::getBurnDuration);
     }
 
     @Override
     public Burning extract(Burning burning, TransactionContext transaction) {
-        int value = Math.min(this.target.litTime, burning.intValue(this.target::getBurnDuration));
         int fuelTime = burning.getBurnDuration(this.target::getBurnDuration);
+        int value = Math.min(this.target.litTime, burning.intValue(this.target::getBurnDuration));
         updateSnapshots(transaction);
         this.target.litTime -= value;
         if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {

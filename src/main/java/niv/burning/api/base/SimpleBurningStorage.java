@@ -38,22 +38,23 @@ public class SimpleBurningStorage
 
     @Override
     public Burning insert(Burning burning, TransactionContext transaction) {
-        int value = burning.intValue(this.getBurnDuration);
         int fuelTime = burning.getBurnDuration(this.getBurnDuration);
-        int delta = Math.min(Math.max(this.maxBurning, fuelTime) - this.burning, value);
+        int value = Math.min(
+                Math.max(this.maxBurning, fuelTime) - this.burning,
+                burning.intValue(this.getBurnDuration));
         updateSnapshots(transaction);
-        this.burning += delta;
+        this.burning += value;
         if ((this.maxBurning > fuelTime && this.burning <= fuelTime) || this.burning > this.maxBurning) {
             this.maxBurning = fuelTime;
             this.zero = burning.zero();
         }
-        return burning.withValue(value - delta, this.getBurnDuration);
+        return burning.withValue(value, this.getBurnDuration);
     }
 
     @Override
     public Burning extract(Burning burning, TransactionContext transaction) {
-        int value = Math.min(this.burning, burning.intValue(this.getBurnDuration));
         int fuelTime = burning.getBurnDuration(this.getBurnDuration);
+        int value = Math.min(this.burning, burning.intValue(this.getBurnDuration));
         updateSnapshots(transaction);
         this.burning -= value;
         if (this.maxBurning > fuelTime && this.burning <= fuelTime) {

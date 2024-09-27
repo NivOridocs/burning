@@ -31,9 +31,7 @@ public class DynamicBurningStorage
     }
 
     private static final Map<LevelPos, DynamicBurningStorage> CACHE = new MapMaker()
-            .concurrencyLevel(1)
-            .weakValues()
-            .makeMap();
+            .concurrencyLevel(1).weakValues().makeMap();
 
     private final DynamicBurningStorageProvider provider;
 
@@ -71,26 +69,27 @@ public class DynamicBurningStorage
 
     @Override
     public Burning insert(Burning burning, TransactionContext transaction) {
-        double value = burning.doubleValue(this::getBurnDuration);
-        int fuelTime = burning.getBurnDuration(this::getBurnDuration);
         double currentBurning = burning();
         double maxBurning = maxBurning();
-        double delta = Math.min(Math.max(maxBurning, fuelTime) - currentBurning, value);
+        int fuelTime = burning.getBurnDuration(this::getBurnDuration);
+        double value = Math.min(
+                Math.max(maxBurning, fuelTime) - currentBurning,
+                burning.doubleValue(this::getBurnDuration));
         updateSnapshots(transaction);
-        currentBurning += delta;
+        currentBurning += value;
         burning(currentBurning);
         if ((maxBurning > fuelTime && currentBurning <= fuelTime) || currentBurning > maxBurning) {
             maxBurning(fuelTime);
             this.zero = burning.zero();
         }
-        return burning.withValue((int) (value - delta), this::getBurnDuration);
+        return burning.withValue((int) value, this::getBurnDuration);
     }
 
     @Override
     public Burning extract(Burning burning, TransactionContext transaction) {
         double currentBurning = burning();
-        double value = Math.min(currentBurning, burning.doubleValue(this::getBurnDuration));
         int fuelTime = burning.getBurnDuration(this::getBurnDuration);
+        double value = Math.min(currentBurning, burning.doubleValue(this::getBurnDuration));
         updateSnapshots(transaction);
         currentBurning -= value;
         burning(currentBurning);
