@@ -8,8 +8,6 @@ import java.util.function.ToIntFunction;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.collect.MapMaker;
-
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -19,7 +17,6 @@ public final class Burning implements Comparable<Burning> {
 
     private static final Map<Item, Burning> ZEROS;
     private static final Map<Item, Burning> ONES;
-    private static final Map<Item, ItemStack> STACKS;
 
     public static final Burning LAVA_BUCKET;
     public static final Burning BLAZE_ROD;
@@ -31,7 +28,6 @@ public final class Burning implements Comparable<Burning> {
     static {
         ZEROS = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
         ONES = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
-        STACKS = new MapMaker().concurrencyLevel(1).weakValues().makeMap();
 
         LAVA_BUCKET = of(Items.LAVA_BUCKET).one().zero();
         BLAZE_ROD = of(Items.BLAZE_ROD).one().zero();
@@ -66,7 +62,7 @@ public final class Burning implements Comparable<Burning> {
     }
 
     public int getBurnDuration(ToIntFunction<ItemStack> customBurnDuration) {
-        return customBurnDuration.applyAsInt(toStack(this.fuel));
+        return customBurnDuration.applyAsInt(new ItemStack(this.fuel));
     }
 
     public int intValue() {
@@ -176,7 +172,7 @@ public final class Burning implements Comparable<Burning> {
         double x;
         if (this.percent == 0) {
             return ofOptional(fuel, customBurnDuration).orElse(this);
-        } else if ((max = customBurnDuration.applyAsInt(toStack(fuel))) > 0
+        } else if ((max = customBurnDuration.applyAsInt(new ItemStack(fuel))) > 0
                 && (x = this.percent * max / getBurnDuration(customBurnDuration)) <= 1d) {
             return new Burning(x, fuel);
         } else {
@@ -209,6 +205,11 @@ public final class Burning implements Comparable<Burning> {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Burning [" + percent + " of " + fuel + "]";
+    }
+
     public static final @Nullable Burning of(Item fuel) {
         return AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)
                 ? ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item))
@@ -216,7 +217,7 @@ public final class Burning implements Comparable<Burning> {
     }
 
     public static final @Nullable Burning of(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
-        return customBurnDuration.applyAsInt(toStack(fuel)) > 0
+        return customBurnDuration.applyAsInt(new ItemStack(fuel)) > 0
                 ? ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item))
                 : null;
     }
@@ -237,7 +238,91 @@ public final class Burning implements Comparable<Burning> {
         return AbstractFurnaceBlockEntity.getFuel().getOrDefault(item, 0);
     }
 
-    private static final ItemStack toStack(Item item) {
-        return STACKS.computeIfAbsent(item, ItemStack::new);
+    public static final Burning add(Burning a, Burning b) {
+        var value = a.doubleValue() + b.doubleValue();
+        return a.getBurnDuration() >= b.getBurnDuration()
+                ? combine(a, b, value)
+                : combine(b, a, value);
+    }
+
+    public static final Burning add(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
+        var value = a.doubleValue(customBurnDuration) + b.doubleValue(customBurnDuration);
+        return a.getBurnDuration(customBurnDuration) >= b.getBurnDuration(customBurnDuration)
+                ? combine(a, b, value, customBurnDuration)
+                : combine(b, a, value, customBurnDuration);
+    }
+
+    public static final Burning subtract(Burning a, Burning b) {
+        var value = Math.max(0, a.doubleValue() - b.doubleValue());
+        return a.getBurnDuration() >= b.getBurnDuration()
+                ? combine(a, b, value)
+                : combine(b, a, value);
+    }
+
+    public static final Burning subtract(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
+        var value = Math.max(0, a.doubleValue(customBurnDuration) - b.doubleValue(customBurnDuration));
+        return a.getBurnDuration(customBurnDuration) >= b.getBurnDuration(customBurnDuration)
+                ? combine(a, b, value, customBurnDuration)
+                : combine(b, a, value, customBurnDuration);
+    }
+
+    public static final int compare(Burning a, Burning b) {
+        if (a == b) {
+            return 0;
+        } else if (a == null) {
+            return -1;
+        } else if (b == null) {
+            return +1;
+        } else {
+            return a.compareTo(b);
+        }
+    }
+
+    public static final int compare(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
+        if (a == b) {
+            return 0;
+        } else if (a == null) {
+            return -1;
+        } else if (b == null) {
+            return +1;
+        } else {
+            return a.compareTo(b, customBurnDuration);
+        }
+    }
+
+    public static final Burning max(Burning a, Burning b) {
+        return compare(a, b) >= 0 ? a : b;
+    }
+
+    public static final Burning max(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
+        return compare(a, b, customBurnDuration) >= 0 ? a : b;
+    }
+
+    public static final Burning min(Burning a, Burning b) {
+        return compare(a, b) <= 0 ? a : b;
+    }
+
+    public static final Burning min(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
+        return compare(a, b, customBurnDuration) <= 0 ? a : b;
+    }
+
+    private static final Burning combine(Burning high, Burning low, double value) {
+        if (value <= low.getBurnDuration()) {
+            return low.withValue((int) value);
+        } else if (value <= high.getBurnDuration()) {
+            return high.withValue((int) value);
+        } else {
+            return Burning.MIN_VALUE.withValue((int) value);
+        }
+    }
+
+    private static final Burning combine(Burning high, Burning low, double value, ToIntFunction<ItemStack> customBurnDuration) {
+        if (value <= low.getBurnDuration(customBurnDuration)) {
+            return low.withValue((int) value, customBurnDuration);
+        } else if (value <= high.getBurnDuration(customBurnDuration)) {
+            return high.withValue((int) value, customBurnDuration);
+        } else {
+            return Burning.MIN_VALUE.withValue((int) value, customBurnDuration);
+        }
     }
 }
