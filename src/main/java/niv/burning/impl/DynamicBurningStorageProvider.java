@@ -3,6 +3,7 @@ package niv.burning.impl;
 import java.util.Optional;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import niv.burning.api.BurningStorage;
 
+@ApiStatus.Internal
 public final class DynamicBurningStorageProvider implements BlockApiProvider<BurningStorage, @Nullable Direction> {
 
     public static final ResourceKey<Registry<DynamicBurningStorageProvider>> REGISTRY = ResourceKey
@@ -48,11 +50,10 @@ public final class DynamicBurningStorageProvider implements BlockApiProvider<Bur
     }
 
     @Override
-    public @Nullable BurningStorage find(
-            Level level, BlockPos pos, BlockState state,
+    public @Nullable BurningStorage find(Level level, BlockPos pos, BlockState state,
             @Nullable BlockEntity blockEntity, @Nullable Direction context) {
         if (blockEntity != null && this.type == blockEntity.getType()) {
-            return DynamicBurningStorage.of(level, pos, this, blockEntity);
+            return new DynamicBurningStorage(this, blockEntity);
         } else {
             return null;
         }

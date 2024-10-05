@@ -6,8 +6,6 @@ import java.util.function.BiFunction;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import com.google.common.collect.ImmutableMap;
-
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.ServerStarting;
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
 import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
@@ -38,36 +36,29 @@ public final class BurningRegistrar implements ServerStarting {
         var map = new HashMap<Block, BlockApiProvider<BurningStorage, @Nullable Direction>>();
         addAbstractFurnaceBurningStorages(server.registryAccess(), map::putIfAbsent);
         addDynamicBurningStorages(server.registryAccess(), map::putIfAbsent);
-        BurningStorageLifecycleEvents.BURNING_STORAGE_REGISTERING.invoker().accept(server, ImmutableMap.copyOf(map));
-        map.forEach((block, provider) -> BurningStorage.SIDED.registerForBlocks(provider, block));
+        BurningStorageLifecycleEvents.BURNING_STORAGE_REGISTERING.invoker().accept(server, map);
+        map.forEach((block, provider) -> BurningStorage.SIDED.registerForBlocks(
+                new CachedBurningStorageProvider(provider), block));
     }
 
     private void addAbstractFurnaceBurningStorages(RegistryAccess registries, PutIfAbsent function) {
         registries.registryOrThrow(Registries.BLOCK).stream()
                 .filter(this::isAbsent)
                 .filter(this::byEntity)
-                .forEach(block -> function.apply(block, AbstractFurnaceBurningStorage::find));
+                .forEach(block -> function.apply(block, new AbstractFurnaceBurningStorageProvider()));
     }
 
     private boolean byEntity(Block block) {
-        if (block instanceof EntityBlock entityBlock) {
-            var blockEntity = entityBlock.newBlockEntity(BlockPos.ZERO, block.defaultBlockState());
-            return blockEntity instanceof AbstractFurnaceBlockEntity;
-        } else {
-            return false;
-        }
+        return block instanceof EntityBlock e
+                && e.newBlockEntity(BlockPos.ZERO, block.defaultBlockState()) instanceof AbstractFurnaceBlockEntity;
     }
 
     private void addDynamicBurningStorages(RegistryAccess registries, PutIfAbsent function) {
         registries.registry(DynamicBurningStorageProvider.REGISTRY).stream()
                 .flatMap(Registry::stream)
-                .forEach(provider -> this.addDynamicBurningStorage(provider, function));
-    }
-
-    private void addDynamicBurningStorage(DynamicBurningStorageProvider provider, PutIfAbsent function) {
-        ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
-                .filter(this::isAbsent)
-                .forEach(block -> function.apply(block, provider));
+                .forEach(provider -> ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
+                        .filter(this::isAbsent)
+                        .forEach(block -> function.apply(block, provider)));
     }
 
     private boolean isAbsent(Block block) {

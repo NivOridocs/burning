@@ -2,36 +2,22 @@ package niv.burning.impl;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT;
 
-import java.util.Map;
-
-import com.google.common.collect.MapMaker;
+import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-import net.fabricmc.fabric.impl.transfer.DebugMessages;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 
+@ApiStatus.Internal
 public class DynamicBurningStorage
         extends SnapshotParticipant<DynamicBurningStorage.Snapshot>
         implements BurningStorage {
 
     static final record Snapshot(double burning, double maxBurning, Burning zero) {
     }
-
-    private static final record LevelPos(Level level, BlockPos pos) {
-        @Override
-        public String toString() {
-            return DebugMessages.forGlobalPos(level, pos);
-        }
-    }
-
-    private static final Map<LevelPos, DynamicBurningStorage> CACHE = new MapMaker()
-            .concurrencyLevel(1).weakValues().makeMap();
 
     private final DynamicBurningStorageProvider provider;
 
@@ -131,10 +117,5 @@ public class DynamicBurningStorage
             this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
             BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
         }
-    }
-
-    static final BurningStorage of(Level level, BlockPos pos,
-            DynamicBurningStorageProvider provider, BlockEntity entity) {
-        return CACHE.computeIfAbsent(new LevelPos(level, pos), key -> new DynamicBurningStorage(provider, entity));
     }
 }

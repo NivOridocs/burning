@@ -1,20 +1,11 @@
 package niv.burning.impl;
 
-import java.util.Map;
-
 import org.jetbrains.annotations.ApiStatus;
-
-import com.google.common.collect.MapMaker;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-import net.fabricmc.fabric.impl.transfer.DebugMessages;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
@@ -24,16 +15,6 @@ import niv.burning.api.base.SimpleBurningStorage.Snapshot;
 public class AbstractFurnaceBurningStorage
         extends SnapshotParticipant<Snapshot>
         implements BurningStorage {
-
-    private static final record LevelPos(Level level, BlockPos pos) {
-        @Override
-        public String toString() {
-            return DebugMessages.forGlobalPos(level, pos);
-        }
-    }
-
-    private static final Map<LevelPos, AbstractFurnaceBurningStorage> CACHE = new MapMaker()
-            .concurrencyLevel(1).weakValues().makeMap();
 
     private final AbstractFurnaceBlockEntity target;
 
@@ -105,16 +86,6 @@ public class AbstractFurnaceBurningStorage
             state = state.setValue(BlockStateProperties.LIT, isBurning);
             this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
             BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
-        }
-    }
-
-    @SuppressWarnings("java:S1172")
-    static final BurningStorage find(
-            Level level, BlockPos pos, BlockState state, BlockEntity blockEntity, Direction direction) {
-        if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
-            return CACHE.computeIfAbsent(new LevelPos(level, pos), key -> new AbstractFurnaceBurningStorage(entity));
-        } else {
-            return null;
         }
     }
 }
