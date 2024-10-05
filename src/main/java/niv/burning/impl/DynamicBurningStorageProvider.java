@@ -26,7 +26,7 @@ import niv.burning.api.BurningStorage;
 public final class DynamicBurningStorageProvider implements BlockApiProvider<BurningStorage, @Nullable Direction> {
 
     public static final ResourceKey<Registry<DynamicBurningStorageProvider>> REGISTRY = ResourceKey
-            .createRegistryKey(ResourceLocation.tryBuild(BurningImpl.MOD_ID, "burning_storage"));
+            .createRegistryKey(ResourceLocation.tryBuild(BurningImpl.MOD_ID, "dynamic_storage"));
 
     public static final Codec<DynamicBurningStorageProvider> CODEC = RecordCodecBuilder.create(instance -> instance
             .group(
