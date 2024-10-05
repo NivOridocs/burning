@@ -18,11 +18,17 @@ public class AbstractFurnaceBurningStorage
 
     private final AbstractFurnaceBlockEntity target;
 
-    private Burning zero;
-
     AbstractFurnaceBurningStorage(AbstractFurnaceBlockEntity target) {
         this.target = target;
-        this.zero = Burning.MIN_VALUE;
+    }
+
+    private Burning zero() {
+        var fuel = ((FuelCache) this.target).burning_getFuel();
+        return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, this.target::getBurnDuration);
+    }
+
+    private void zero(Burning zero) {
+        ((FuelCache) this.target).burning_setFuel(zero.getFuel());
     }
 
     @Override
@@ -36,7 +42,7 @@ public class AbstractFurnaceBurningStorage
         if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
                 || this.target.litTime > this.target.litDuration) {
             this.target.litDuration = fuelTime;
-            this.zero = burning.zero();
+            zero(burning.zero());
         }
         return burning.withValue(value, this.target::getBurnDuration);
     }
@@ -49,17 +55,14 @@ public class AbstractFurnaceBurningStorage
         this.target.litTime -= value;
         if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {
             this.target.litDuration = fuelTime;
-            this.zero = burning.zero();
+            zero(burning.zero());
         }
         return burning.withValue(value, this.target::getBurnDuration);
     }
 
     @Override
     public Burning getBurning() {
-        if (this.target.litTime > zero.getBurnDuration(this.target::getBurnDuration)) {
-            this.zero = Burning.MIN_VALUE;
-        }
-        return zero.withValue(this.target.litTime, this.target::getBurnDuration);
+        return this.zero().withValue(this.target.litTime, this.target::getBurnDuration);
     }
 
     @Override
@@ -67,14 +70,14 @@ public class AbstractFurnaceBurningStorage
         return new Snapshot(
                 this.target.litTime,
                 this.target.litDuration,
-                this.zero);
+                this.zero());
     }
 
     @Override
     protected void readSnapshot(Snapshot snapshot) {
         this.target.litTime = snapshot.burning();
         this.target.litDuration = snapshot.maxBurning();
-        this.zero = snapshot.zero();
+        this.zero(snapshot.zero());
     }
 
     @Override

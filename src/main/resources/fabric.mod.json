@@ -11,6 +11,11 @@
         "homepage": "TODO",
         "sources": "TODO"
     },
+    "custom": {
+		"loom:injected_interfaces": {
+			"net/minecraft/class_2609": ["niv/burning/impl/FuelCache"]
+		}
+	},
     "license": "MIT",
     "icon": "assets/burning/icon.png",
     "environment": "*",
@@ -22,7 +27,10 @@
             "niv.burning.gametest.GameTestBurningRegistrar"
         ]
     },
-    "accessWidener" : "burning.accessWidener",
+    "accessWidener": "burning.accessWidener",
+    "mixins": [
+        "burning.mixins.json"
+    ],
     "depends": {
         "fabricloader": ">=0.16.5",
         "minecraft": "~1.21",
