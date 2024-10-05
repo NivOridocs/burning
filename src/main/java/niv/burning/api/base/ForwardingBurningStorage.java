@@ -9,14 +9,14 @@ import niv.burning.api.BurningStorage;
 
 public class ForwardingBurningStorage implements BurningStorage {
 
-    protected final Supplier<BurningStorage> target;
+    protected final Supplier<? extends BurningStorage> target;
 
     public ForwardingBurningStorage(BurningStorage target) {
         this(() -> target);
         Objects.requireNonNull(target);
     }
 
-    public ForwardingBurningStorage(Supplier<BurningStorage> target) {
+    public ForwardingBurningStorage(Supplier<? extends BurningStorage> target) {
         this.target = Objects.requireNonNull(target);
     }
 
