@@ -1,6 +1,5 @@
 package niv.burning.impl.mixin;
 
-import org.jetbrains.annotations.ApiStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,7 +16,6 @@ import niv.burning.api.BurningStorage;
 import niv.burning.api.base.AbstractFurnaceBurningStorage;
 import niv.burning.impl.AbstractFurnaceBlockEntityExtension;
 
-@ApiStatus.Internal
 @Mixin(AbstractFurnaceBlockEntity.class)
 public class AbstractFurnaceBlockEntityMixin implements AbstractFurnaceBlockEntityExtension {
 
