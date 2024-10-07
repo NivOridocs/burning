@@ -1,15 +1,18 @@
 package niv.burning.impl;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
+import com.google.common.collect.MapMaker;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup.BlockApiProvider;
+import net.fabricmc.fabric.impl.transfer.DebugMessages;
 import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,23 +40,34 @@ public final class DynamicBurningStorageProvider implements BlockApiProvider<Bur
                     Codec.STRING.fieldOf("lit_duration").forGetter(src -> src.litDuration.getName()))
             .apply(instance, DynamicBurningStorageProvider::from));
 
+    private static final record LevelPos(Level level, BlockPos pos) {
+        @Override
+        public String toString() {
+            return DebugMessages.forGlobalPos(level, pos);
+        }
+    }
+
     final BlockEntityType<?> type;
 
     final DynamicField litTime;
 
     final DynamicField litDuration;
 
+    private final Map<LevelPos, BurningStorage> cache;
+
     private DynamicBurningStorageProvider(BlockEntityType<?> type, DynamicField litTime, DynamicField litDuration) {
         this.type = type;
         this.litTime = litTime;
         this.litDuration = litDuration;
+        this.cache = new MapMaker().concurrencyLevel(1).weakValues().makeMap();
     }
 
     @Override
     public @Nullable BurningStorage find(Level level, BlockPos pos, BlockState state,
             @Nullable BlockEntity blockEntity, @Nullable Direction context) {
-        if (blockEntity != null && this.type == blockEntity.getType()) {
-            return new DynamicBurningStorage(this, blockEntity);
+        if (blockEntity != null && this.type.equals(blockEntity.getType())) {
+            return this.cache.computeIfAbsent(new LevelPos(level, pos),
+                    key -> new DynamicBurningStorage(this, blockEntity));
         } else {
             return null;
         }
