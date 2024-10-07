@@ -60,7 +60,7 @@ public class DynamicBurningStorage
         int fuelTime = burning.getBurnDuration(this::getBurnDuration);
         double value = Math.min(
                 Math.max(maxBurning, fuelTime) - currentBurning,
-                burning.doubleValue(this::getBurnDuration));
+                burning.getValue(this::getBurnDuration));
         updateSnapshots(transaction);
         currentBurning += value;
         burning(currentBurning);
@@ -75,7 +75,7 @@ public class DynamicBurningStorage
     public Burning extract(Burning burning, TransactionContext transaction) {
         double currentBurning = burning();
         int fuelTime = burning.getBurnDuration(this::getBurnDuration);
-        double value = Math.min(currentBurning, burning.doubleValue(this::getBurnDuration));
+        double value = Math.min(currentBurning, burning.getValue(this::getBurnDuration));
         updateSnapshots(transaction);
         currentBurning -= value;
         burning(currentBurning);

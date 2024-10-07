@@ -61,7 +61,7 @@ class BurningStorageTests {
 
         assertTrue(storage.supportsInsertion());
         assertTrue(storage.supportsExtraction());
-        assertEquals(0, storage.getBurning().intValue());
+        assertEquals(0, storage.getBurning().getValue().intValue());
 
         final var coalOne = Burning.COAL.one();
         final var coal8 = Burning.COAL.withValue(800);
@@ -72,7 +72,7 @@ class BurningStorageTests {
             assertEquals(coal8, storage.getBurning());
         }
 
-        assertEquals(0, storage.getBurning().intValue());
+        assertEquals(0, storage.getBurning().getValue().intValue());
 
         try (var transaction = Transaction.openOuter()) {
             assertEquals(coalOne, storage.insert(coalOne, transaction));
@@ -133,7 +133,7 @@ class BurningStorageTests {
 
         assertTrue(source.supportsInsertion());
         assertTrue(source.supportsExtraction());
-        assertEquals(0, source.getBurning().intValue());
+        assertEquals(0, source.getBurning().getValue().intValue());
 
         final var blaze12 = Burning.BLAZE_ROD.withValue(1200);
         final var blaze10 = Burning.BLAZE_ROD.withValue(1000);
@@ -147,7 +147,7 @@ class BurningStorageTests {
         var target = targetConstructor.get();
         assertTrue(target.supportsInsertion());
         assertTrue(target.supportsExtraction());
-        assertEquals(0, target.getBurning().intValue());
+        assertEquals(0, target.getBurning().getValue().intValue());
 
         try (var transaction = Transaction.openOuter()) {
             assertEquals(blaze10, BurningStorage.transfer(source, target, blaze12, transaction));

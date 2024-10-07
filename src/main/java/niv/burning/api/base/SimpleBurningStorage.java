@@ -41,7 +41,7 @@ public class SimpleBurningStorage
         int fuelTime = burning.getBurnDuration(this.getBurnDuration);
         int value = Math.min(
                 Math.max(this.maxBurning, fuelTime) - this.burning,
-                burning.intValue(this.getBurnDuration));
+                burning.getValue(this.getBurnDuration).intValue());
         updateSnapshots(transaction);
         this.burning += value;
         if ((this.maxBurning > fuelTime && this.burning <= fuelTime) || this.burning > this.maxBurning) {
@@ -54,7 +54,7 @@ public class SimpleBurningStorage
     @Override
     public Burning extract(Burning burning, TransactionContext transaction) {
         int fuelTime = burning.getBurnDuration(this.getBurnDuration);
-        int value = Math.min(this.burning, burning.intValue(this.getBurnDuration));
+        int value = Math.min(this.burning, burning.getValue(this.getBurnDuration).intValue());
         updateSnapshots(transaction);
         this.burning -= value;
         if (this.maxBurning > fuelTime && this.burning <= fuelTime) {

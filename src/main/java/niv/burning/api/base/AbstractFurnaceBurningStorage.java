@@ -34,7 +34,7 @@ public class AbstractFurnaceBurningStorage
         int fuelTime = burning.getBurnDuration(this.target::getBurnDuration);
         int value = Math.min(
                 Math.max(this.target.litDuration, fuelTime) - this.target.litTime,
-                burning.intValue(this.target::getBurnDuration));
+                burning.getValue(this.target::getBurnDuration).intValue());
         updateSnapshots(transaction);
         this.target.litTime += value;
         if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
@@ -48,7 +48,7 @@ public class AbstractFurnaceBurningStorage
     @Override
     public Burning extract(Burning burning, TransactionContext transaction) {
         int fuelTime = burning.getBurnDuration(this.target::getBurnDuration);
-        int value = Math.min(this.target.litTime, burning.intValue(this.target::getBurnDuration));
+        int value = Math.min(this.target.litTime, burning.getValue(this.target::getBurnDuration).intValue());
         updateSnapshots(transaction);
         this.target.litTime -= value;
         if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {

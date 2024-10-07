@@ -38,8 +38,8 @@ public class GameTestBurningRegistrar {
         var storage = BurningStorage.SIDED.find(context.getLevel(), context.absolutePos(POS), null);
         context.assertTrue(storage != null,
                 "Expected BurningStorage, get null");
-        context.assertTrue(storage.getBurning().intValue() == 0,
-                "Expected 0, got " + storage.getBurning().intValue());
+        context.assertTrue(storage.getBurning().getValue().intValue() == 0,
+                "Expected 0, got " + storage.getBurning().getValue().intValue());
 
         final var coal8 = Burning.COAL.withValue(800);
 
@@ -48,8 +48,8 @@ public class GameTestBurningRegistrar {
             transaction.commit();
         }
 
-        context.assertTrue(storage.getBurning().intValue() == 800,
-                "Expected 800, got " + storage.getBurning().intValue());
+        context.assertTrue(storage.getBurning().getValue().intValue() == 800,
+                "Expected 800, got " + storage.getBurning().getValue().intValue());
         context.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.TRUE);
 
         try (var transaction = Transaction.openOuter()) {
@@ -57,8 +57,8 @@ public class GameTestBurningRegistrar {
             transaction.commit();
         }
 
-        context.assertTrue(storage.getBurning().intValue() == 0,
-                "Expected 0, got " + storage.getBurning().intValue());
+        context.assertTrue(storage.getBurning().getValue().intValue() == 0,
+                "Expected 0, got " + storage.getBurning().getValue().intValue());
         context.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
 
         context.succeed();

@@ -38,7 +38,7 @@ class BurningTests {
 
         var burningTwo = burningTwoOptional.get().withValue(5000, stack -> Burning.defaultBurnDuration(stack) / 2);
         assertEquals(Items.LAVA_BUCKET, burningTwo.getFuel());
-        assertEquals(10000, burningTwo.intValue());
+        assertEquals(10000, burningTwo.getValue().intValue());
 
         assertTrue(Objects.equal(burningOne, burningTwo));
     }
@@ -68,11 +68,11 @@ class BurningTests {
 
         assertFalse(Objects.equal(sub1, sub2));
 
-        assertEquals(coal4, Burning.min(coal4, coal6));
-        assertEquals(coal4, Burning.min(coal6, coal4));
+        assertEquals(coal4, Burning.minValue(coal4, coal6));
+        assertEquals(coal4, Burning.minValue(coal6, coal4));
 
-        assertEquals(coal6, Burning.max(coal4, coal6));
-        assertEquals(coal6, Burning.max(coal6, coal4));
+        assertEquals(coal6, Burning.maxValue(coal4, coal6));
+        assertEquals(coal6, Burning.maxValue(coal6, coal4));
     }
 
     @Test
@@ -102,11 +102,11 @@ class BurningTests {
 
         assertFalse(Objects.equal(sub1, sub2));
 
-        assertEquals(coal4, Burning.min(coal4, coal6, half));
-        assertEquals(coal4, Burning.min(coal6, coal4, half));
+        assertEquals(coal4, Burning.minValue(coal4, coal6, half));
+        assertEquals(coal4, Burning.minValue(coal6, coal4, half));
 
-        assertEquals(coal6, Burning.max(coal4, coal6, half));
-        assertEquals(coal6, Burning.max(coal6, coal4, half));
+        assertEquals(coal6, Burning.maxValue(coal4, coal6, half));
+        assertEquals(coal6, Burning.maxValue(coal6, coal4, half));
     }
 
     @Test
@@ -136,10 +136,10 @@ class BurningTests {
 
         assertFalse(Objects.equal(sub1, sub2));
 
-        assertEquals(coal4, Burning.min(coal4, coal6, square));
-        assertEquals(coal4, Burning.min(coal6, coal4, square));
+        assertEquals(coal4, Burning.minValue(coal4, coal6, square));
+        assertEquals(coal4, Burning.minValue(coal6, coal4, square));
 
-        assertEquals(coal6, Burning.max(coal4, coal6, square));
-        assertEquals(coal6, Burning.max(coal6, coal4, square));
+        assertEquals(coal6, Burning.maxValue(coal4, coal6, square));
+        assertEquals(coal6, Burning.maxValue(coal6, coal4, square));
     }
 }
