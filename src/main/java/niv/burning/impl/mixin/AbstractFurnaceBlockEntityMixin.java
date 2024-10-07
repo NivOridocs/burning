@@ -13,11 +13,13 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import niv.burning.impl.FuelCache;
+import niv.burning.api.BurningStorage;
+import niv.burning.api.base.AbstractFurnaceBurningStorage;
+import niv.burning.impl.AbstractFurnaceBlockEntityExtension;
 
 @ApiStatus.Internal
 @Mixin(AbstractFurnaceBlockEntity.class)
-public class AbstractFurnaceBlockEntityMixin implements FuelCache {
+public class AbstractFurnaceBlockEntityMixin implements AbstractFurnaceBlockEntityExtension {
 
     private static final String LEVEL = "Lnet/minecraft/world/level/Level;";
     private static final String BLOCK_POS = "Lnet/minecraft/core/BlockPos;";
@@ -27,16 +29,25 @@ public class AbstractFurnaceBlockEntityMixin implements FuelCache {
 
     @Unique
     @SuppressWarnings("java:S116")
-    private Item burning_fuel;
+    private final BurningStorage burning_burningStorage = new AbstractFurnaceBurningStorage((AbstractFurnaceBlockEntity) (Object) this);
+
+    @Unique
+    @SuppressWarnings("java:S116")
+    private Item burning_lastBurnedFuel;
 
     @Override
     public Item burning_getFuel() {
-        return this.burning_fuel;
+        return this.burning_lastBurnedFuel;
     }
 
     @Override
     public void burning_setFuel(Item fuel) {
-        this.burning_fuel = fuel;
+        this.burning_lastBurnedFuel = fuel;
+    }
+
+    @Override
+    public BurningStorage burning_getBurningStorage() {
+        return burning_burningStorage;
     }
 
     @Inject( //
@@ -46,6 +57,6 @@ public class AbstractFurnaceBlockEntityMixin implements FuelCache {
     private static void injectAfterGetBurnDuration(CallbackInfo info,
             @Local AbstractFurnaceBlockEntity entity,
             @Local(ordinal = 0) ItemStack itemStack) {
-        ((FuelCache) entity).burning_setFuel(itemStack.getItem());
+        ((AbstractFurnaceBlockEntityExtension) entity).burning_setFuel(itemStack.getItem());
     }
 }

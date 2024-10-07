@@ -1,6 +1,4 @@
-package niv.burning.impl;
-
-import org.jetbrains.annotations.ApiStatus;
+package niv.burning.api.base;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
@@ -10,25 +8,25 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage.Snapshot;
+import niv.burning.impl.AbstractFurnaceBlockEntityExtension;
 
-@ApiStatus.Internal
 public class AbstractFurnaceBurningStorage
-        extends SnapshotParticipant<Snapshot>
+        extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
         implements BurningStorage {
 
     private final AbstractFurnaceBlockEntity target;
 
-    AbstractFurnaceBurningStorage(AbstractFurnaceBlockEntity target) {
+    public AbstractFurnaceBurningStorage(AbstractFurnaceBlockEntity target) {
         this.target = target;
     }
 
-    private Burning zero() {
-        var fuel = ((FuelCache) this.target).burning_getFuel();
+    private Burning getZero() {
+        var fuel = ((AbstractFurnaceBlockEntityExtension) this.target).burning_getFuel();
         return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, this.target::getBurnDuration);
     }
 
-    private void zero(Burning zero) {
-        ((FuelCache) this.target).burning_setFuel(zero.getFuel());
+    private void setZero(Burning zero) {
+        ((AbstractFurnaceBlockEntityExtension) this.target).burning_setFuel(zero.getFuel());
     }
 
     @Override
@@ -42,7 +40,7 @@ public class AbstractFurnaceBurningStorage
         if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
                 || this.target.litTime > this.target.litDuration) {
             this.target.litDuration = fuelTime;
-            zero(burning.zero());
+            setZero(burning.zero());
         }
         return burning.withValue(value, this.target::getBurnDuration);
     }
@@ -55,14 +53,14 @@ public class AbstractFurnaceBurningStorage
         this.target.litTime -= value;
         if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {
             this.target.litDuration = fuelTime;
-            zero(burning.zero());
+            setZero(burning.zero());
         }
         return burning.withValue(value, this.target::getBurnDuration);
     }
 
     @Override
     public Burning getBurning() {
-        return this.zero().withValue(this.target.litTime, this.target::getBurnDuration);
+        return this.getZero().withValue(this.target.litTime, this.target::getBurnDuration);
     }
 
     @Override
@@ -70,14 +68,14 @@ public class AbstractFurnaceBurningStorage
         return new Snapshot(
                 this.target.litTime,
                 this.target.litDuration,
-                this.zero());
+                this.getZero());
     }
 
     @Override
     protected void readSnapshot(Snapshot snapshot) {
         this.target.litTime = snapshot.burning();
         this.target.litDuration = snapshot.maxBurning();
-        this.zero(snapshot.zero());
+        this.setZero(snapshot.zero());
     }
 
     @Override

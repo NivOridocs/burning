@@ -13,7 +13,7 @@
     },
     "custom": {
 		"loom:injected_interfaces": {
-			"net/minecraft/class_2609": ["niv/burning/impl/FuelCache"]
+			"net/minecraft/class_2609": ["niv/burning/impl/AbstractFurnaceBlockEntityExtension"]
 		}
 	},
     "license": "MIT",
