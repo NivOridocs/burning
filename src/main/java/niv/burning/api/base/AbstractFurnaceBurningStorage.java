@@ -73,7 +73,7 @@ public class AbstractFurnaceBurningStorage
 
     @Override
     protected void readSnapshot(Snapshot snapshot) {
-        this.target.litTime = snapshot.burning();
+        this.target.litTime = snapshot.currentBurning();
         this.target.litDuration = snapshot.maxBurning();
         this.setZero(snapshot.zero());
     }

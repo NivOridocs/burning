@@ -14,12 +14,12 @@ public class SimpleBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
         implements BurningStorage {
 
-    public static final record Snapshot(int burning, int maxBurning, Burning zero) {
+    public static final record Snapshot(int currentBurning, int maxBurning, Burning zero) {
     }
 
     protected final ToIntFunction<ItemStack> getBurnDuration;
 
-    protected int burning;
+    protected int currentBurning;
 
     protected int maxBurning;
 
@@ -31,20 +31,28 @@ public class SimpleBurningStorage
 
     public SimpleBurningStorage(@Nullable ToIntFunction<ItemStack> getBurnDuration) {
         this.getBurnDuration = getBurnDuration == null ? Burning::defaultBurnDuration : getBurnDuration;
-        this.burning = 0;
+        this.currentBurning = 0;
         this.maxBurning = 0;
         this.zero = Burning.MIN_VALUE;
+    }
+
+    public int getCurrentBurning() {
+        return currentBurning;
+    }
+
+    public int getMaxBurning() {
+        return maxBurning;
     }
 
     @Override
     public Burning insert(Burning burning, TransactionContext transaction) {
         int fuelTime = burning.getBurnDuration(this.getBurnDuration);
         int value = Math.min(
-                Math.max(this.maxBurning, fuelTime) - this.burning,
+                Math.max(this.maxBurning, fuelTime) - this.currentBurning,
                 burning.getValue(this.getBurnDuration).intValue());
         updateSnapshots(transaction);
-        this.burning += value;
-        if ((this.maxBurning > fuelTime && this.burning <= fuelTime) || this.burning > this.maxBurning) {
+        this.currentBurning += value;
+        if ((this.maxBurning > fuelTime && this.currentBurning <= fuelTime) || this.currentBurning > this.maxBurning) {
             this.maxBurning = fuelTime;
             this.zero = burning.zero();
         }
@@ -54,10 +62,10 @@ public class SimpleBurningStorage
     @Override
     public Burning extract(Burning burning, TransactionContext transaction) {
         int fuelTime = burning.getBurnDuration(this.getBurnDuration);
-        int value = Math.min(this.burning, burning.getValue(this.getBurnDuration).intValue());
+        int value = Math.min(this.currentBurning, burning.getValue(this.getBurnDuration).intValue());
         updateSnapshots(transaction);
-        this.burning -= value;
-        if (this.maxBurning > fuelTime && this.burning <= fuelTime) {
+        this.currentBurning -= value;
+        if (this.maxBurning > fuelTime && this.currentBurning <= fuelTime) {
             this.maxBurning = fuelTime;
             this.zero = burning.zero();
         }
@@ -66,17 +74,17 @@ public class SimpleBurningStorage
 
     @Override
     public Burning getBurning() {
-        return zero.withValue(this.burning, this.getBurnDuration);
+        return this.zero.withValue(this.currentBurning, this.getBurnDuration);
     }
 
     @Override
     protected Snapshot createSnapshot() {
-        return new Snapshot(this.burning, this.maxBurning, this.zero);
+        return new Snapshot(this.currentBurning, this.maxBurning, this.zero);
     }
 
     @Override
     protected void readSnapshot(Snapshot snapshot) {
-        this.burning = snapshot.burning;
+        this.currentBurning = snapshot.currentBurning;
         this.maxBurning = snapshot.maxBurning;
         this.zero = snapshot.zero;
     }
