@@ -102,5 +102,5 @@ modrinth {
     versionType = "alpha"
     gameVersions = ["1.21"]
 	uploadFile = remapJar
-	syncBodyFrom = rootProject.file("README.md").text
+	syncBodyFrom = rootProject.file("build/modrinth.README.md").text
 }
