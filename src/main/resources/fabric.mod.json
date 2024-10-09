@@ -1,8 +1,8 @@
 {
     "schemaVersion": 1,
-    "id": "heatlib",
+    "id": "burning",
     "version": "${version}",
-    "name": "HeatLib",
+    "name": "Burning",
     "description": "TODO",
     "authors": [
         "Niv Oridocs"
@@ -11,19 +11,25 @@
         "homepage": "TODO",
         "sources": "TODO"
     },
+    "custom": {
+		"loom:injected_interfaces": {
+			"net/minecraft/class_2609": ["niv/burning/impl/AbstractFurnaceBlockEntityExtension"]
+		}
+	},
     "license": "MIT",
-    "icon": "assets/heatlib/icon.png",
+    "icon": "assets/burning/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "niv.heatlib.HeatLib"
+            "niv.burning.impl.BurningImpl::initialize"
         ],
-        "fabric-datagen": [
-            "niv.heatlib.HeatLibDataGenerator"
+        "fabric-gametest": [
+            "niv.burning.gametest.GameTestBurningRegistrar"
         ]
     },
+    "accessWidener": "burning.accessWidener",
     "mixins": [
-        "heatlib.mixins.json"
+        "burning.mixins.json"
     ],
     "depends": {
         "fabricloader": ">=0.16.5",

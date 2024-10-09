@@ -1,6 +1,7 @@
 plugins {
 	id 'fabric-loom' version '1.7-SNAPSHOT'
 	id 'maven-publish'
+	id 'com.modrinth.minotaur' version '2.+'
 }
 
 version = project.mod_version
@@ -18,8 +19,19 @@ repositories {
 	// for more information about repositories.
 }
 
-fabricApi {
-	configureDataGeneration()
+loom {
+	accessWidenerPath = file("src/main/resources/burning.accessWidener")
+
+	runs {
+		testServer {
+			server()
+			name "Test Server"
+			vmArg "-Dfabric-api.gametest"
+			vmArg "-Dfabric-api.gametest.report-file=${project.buildDir}/junit.xml"
+			runDir "run/testServer"
+			source sourceSets.test
+		}
+	}
 }
 
 dependencies {
@@ -31,6 +43,7 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
+	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }
 
 processResources {
@@ -55,6 +68,10 @@ java {
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
+test {
+	useJUnitPlatform()
+}
+
 jar {
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
@@ -77,4 +94,13 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = "${project.project_id}"
+    versionType = "alpha"
+    gameVersions = ["1.21"]
+	uploadFile = remapJar
+	syncBodyFrom = rootProject.file("build/modrinth.README.md").text
 }
