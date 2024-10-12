@@ -99,9 +99,9 @@ publishing {
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     projectId = "${project.project_id}"
-    versionType = "alpha"
-    gameVersions = ["1.21"]
-	uploadFile = "remapJar"
-	additionalFiles = ["remapSourcesJar"]
+    versionType = "beta"
+    gameVersions = ["1.21", "1.21.1"]
+	uploadFile = remapJar
+	additionalFiles = ["build/libs/burning-${project.mod_version}-sources.jar"]
 	syncBodyFrom = rootProject.file("README.modrinth.md").text
 }
