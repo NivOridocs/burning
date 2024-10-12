@@ -101,7 +101,7 @@ modrinth {
     projectId = "${project.project_id}"
     versionType = "beta"
     gameVersions = ["1.21", "1.21.1"]
-	uploadFile = "remapJar"
-	additionalFiles = ["remapSourcesJar"]
+	uploadFile = remapJar
+	additionalFiles = ["build/libs/burning-${project.mod_version}-sources.jar"]
 	syncBodyFrom = rootProject.file("README.modrinth.md").text
 }
