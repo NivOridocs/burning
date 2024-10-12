@@ -87,7 +87,7 @@ repositories {
 
 dependencies {
     // Add Burning dependency
-    modApi "maven.modrinth:burning:1.0"
+    modImplementation "maven.modrinth:burning:<burning_version>"
 }
 ```
 
