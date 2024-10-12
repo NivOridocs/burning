@@ -101,6 +101,7 @@ modrinth {
     projectId = "${project.project_id}"
     versionType = "alpha"
     gameVersions = ["1.21"]
-	uploadFile = remapJar
-	syncBodyFrom = rootProject.file("build/modrinth.README.md").text
+	uploadFile = "remapJar"
+	additionalFiles = ["remapSourcesJar"]
+	syncBodyFrom = rootProject.file("README.modrinth.md").text
 }
