@@ -3,13 +3,13 @@
     "id": "burning",
     "version": "${version}",
     "name": "Burning",
-    "description": "TODO",
+    "description": "A library mod to access and transfer the burning fuel between furnace-like blocks of all mods.",
     "authors": [
         "Niv Oridocs"
     ],
     "contact": {
-        "homepage": "TODO",
-        "sources": "TODO"
+        "homepage": "https://modrinth.com/mod/burning",
+        "sources": "https://github.com/NivOridocs/burning"
     },
     "custom": {
 		"loom:injected_interfaces": {
@@ -22,9 +22,6 @@
     "entrypoints": {
         "main": [
             "niv.burning.impl.BurningImpl::initialize"
-        ],
-        "fabric-gametest": [
-            "niv.burning.gametest.GameTestBurningRegistrar"
         ]
     },
     "accessWidener": "burning.accessWidener",

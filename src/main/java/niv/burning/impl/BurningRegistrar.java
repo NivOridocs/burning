@@ -27,23 +27,33 @@ public final class BurningRegistrar implements ServerStarting {
     }
 
     private void registerAbstractFurnaceBurningStorages(RegistryAccess registries) {
-        BurningStorage.SIDED.registerForBlocks(
-                (world, pos, state, blockEntity, context) -> blockEntity instanceof AbstractFurnaceBlockEntity entity
-                        ? ((AbstractFurnaceBlockEntityExtension) entity).burning_getBurningStorage()
-                        : null,
-                registries.registryOrThrow(Registries.BLOCK).stream()
-                        .filter(this::isAbsent)
-                        .filter(this::byEntity)
-                        .toArray(Block[]::new));
+        var blocks = registries.registryOrThrow(Registries.BLOCK).stream()
+                .filter(this::isAbsent)
+                .filter(this::byEntity)
+                .toArray(Block[]::new);
+        if (blocks.length > 0) {
+            BurningStorage.SIDED.registerForBlocks(
+                    (world, pos, state, blockEntity, context) -> {
+                        if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
+                            return ((AbstractFurnaceBlockEntityExtension) entity).burning_getBurningStorage();
+                        } else {
+                            return null;
+                        }
+                    }, blocks);
+        }
     }
 
     private void registerDynamicBurningStorages(RegistryAccess registries) {
         registries.registry(DynamicBurningStorageProvider.REGISTRY).stream()
                 .flatMap(Registry::stream)
-                .forEach(provider -> BurningStorage.SIDED.registerForBlocks(provider,
-                        ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
-                                .filter(this::isAbsent)
-                                .toArray(Block[]::new)));
+                .forEach(provider -> {
+                    var blocks = ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
+                            .filter(this::isAbsent)
+                            .toArray(Block[]::new);
+                    if (blocks.length > 0) {
+                        BurningStorage.SIDED.registerForBlocks(provider, blocks);
+                    }
+                });
     }
 
     private boolean byEntity(Block block) {

@@ -6,7 +6,7 @@ Uses Fabric's Lookup and Transaction APIs.
 
 ## Documentation
 
-**Burning** revolves around the [`BurningStorage`](src/main/java/niv/burning/api/BurningStorage.java) interface, which manages insertions and extraction of burning fuel, and the [`Burning`](src/main/java/niv/burning/api/Burning.java) class, which represent the burning fuel itself.
+**Burning** revolves around the [BurningStorage](https://github.com/NivOridocs/burning/tree/main/src/main/java/niv/burning/api/BurningStorage.java) interface, which manages insertions and extraction of burning fuel, and the [Burning](https://github.com/NivOridocs/burning/tree/main/src/main/java/niv/burning/api/Burning.java) class, which represent the burning fuel itself.
 
 You may read the documentation or the source code to learn more.
 
