@@ -8,6 +8,13 @@ import java.util.function.ToIntFunction;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -25,6 +32,8 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
  * </p>
  */
 public final class Burning {
+
+    public static final Codec<Burning> CODEC;
 
     private static final Map<Item, Burning> ZEROS;
     private static final Map<Item, Burning> ONES;
@@ -55,6 +64,12 @@ public final class Burning {
     public static final Burning MAX_VALUE;
 
     static {
+        CODEC = Codec.lazyInitialized(() -> RecordCodecBuilder.create(instance -> instance
+                .group(
+                        Codec.doubleRange(0d, 1d).fieldOf("percent").orElse(0d).forGetter(Burning::getPercent),
+                        BuiltInRegistries.ITEM.byNameCodec().fieldOf("fuel").forGetter(Burning::getFuel))
+                .apply(instance, Burning::new)));
+
         ZEROS = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
         ONES = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
 
@@ -567,5 +582,13 @@ public final class Burning {
         } else {
             return Burning.MIN_VALUE.withValue((int) value, custom);
         }
+    }
+
+    public Tag save(HolderLookup.Provider provider, Tag tag) {
+        return CODEC.encode(this, provider.createSerializationContext(NbtOps.INSTANCE), tag).getOrThrow();
+    }
+
+    public static Optional<Burning> parse(HolderLookup.Provider provider, Tag tag) {
+        return CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag).result();
     }
 }

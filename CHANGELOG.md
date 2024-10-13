@@ -7,6 +7,7 @@
 ### Added
 
 + Add new utility methods for `SimpleBurningStorage`.
++ Add tag loading/saving logic for `Burning` and `SimpleBurningStorage`
 
 ## [0.2] - 2024-10-12
 

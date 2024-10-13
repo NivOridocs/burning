@@ -165,10 +165,23 @@ import niv.burning.api.base.SimpleBurningStorage;
 
 public class NewBlockEntity extends BlockEntity {
     // Add a simple burning storage to the entity
-    public final SimpleBurningStorage storage = SimpleBurningStorage.getForBlockEntity(this);
+    public final SimpleBurningStorage simpleBurningStorage = SimpleBurningStorage.getForBlockEntity(this);
 
     // (Optional) Add a simple container data for the burning storage
-    public final ContainerData data = SimpleBurningStorage.getDefaultContainerData(storage);
+    public final ContainerData containerData = SimpleBurningStorage.getDefaultContainerData(this.simpleBurningStorage);
+
+    // And don't forget to add the following
+    @Override
+    protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
+        // ...
+        this.simpleBurningStorage.load(compoundTag, provider);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
+        // ...
+        this.simpleBurningStorage.save(compoundTag, provider)
+    }
 }
 ```
 

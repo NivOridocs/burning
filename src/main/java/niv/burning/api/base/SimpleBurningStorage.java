@@ -6,6 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -16,6 +18,8 @@ import niv.burning.api.BurningStorage;
 public class SimpleBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
         implements BurningStorage {
+
+    public static final String BURNING_TAG = "Burning";
 
     public static final record Snapshot(int currentBurning, int maxBurning, Burning zero) {
     }
@@ -55,6 +59,18 @@ public class SimpleBurningStorage
         if (this.currentBurning <= value) {
             this.maxBurning = value;
         }
+    }
+
+    public void load(CompoundTag compoundTag, HolderLookup.Provider provider) {
+        Burning.parse(provider, compoundTag.get(BURNING_TAG)).ifPresent(burning -> {
+            this.currentBurning = burning.getValue(this.getBurnDuration).intValue();
+            this.maxBurning = burning.getBurnDuration(this.getBurnDuration);
+            this.zero = burning.zero();
+        });
+    }
+
+    public void save(CompoundTag compoundTag, HolderLookup.Provider provider) {
+        compoundTag.put(BURNING_TAG, this.getBurning().save(provider, new CompoundTag()));
     }
 
     @Override
