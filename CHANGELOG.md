@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.3] - 2024-10-13
+
+### Added
+
++ Add new utility methods for `SimpleBurningStorage`.
++ Add tag loading/saving logic for `Burning` and `SimpleBurningStorage`
+
 ## [0.2] - 2024-10-12
 
 ### Fixed
@@ -15,3 +22,4 @@ Alpha release.
 
 [0.1]: https://github.com/NivOridocs/burning/releases/tag/0.1
 [0.2]: https://github.com/NivOridocs/burning/releases/tag/0.2
+[0.2]: https://github.com/NivOridocs/burning/releases/tag/0.3

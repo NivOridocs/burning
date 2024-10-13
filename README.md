@@ -165,12 +165,23 @@ import niv.burning.api.base.SimpleBurningStorage;
 
 public class NewBlockEntity extends BlockEntity {
     // Add a simple burning storage to the entity
-    public final SimpleBurningStorage storage = new SimpleBurningStorage() {
-        @Override
-        protected void onFinalCommit() {
-            setChanged();
-        }
-    };
+    public final SimpleBurningStorage simpleBurningStorage = SimpleBurningStorage.getForBlockEntity(this);
+
+    // (Optional) Add a simple container data for the burning storage
+    public final ContainerData containerData = SimpleBurningStorage.getDefaultContainerData(this.simpleBurningStorage);
+
+    // And don't forget to add the following
+    @Override
+    protected void loadAdditional(CompoundTag compoundTag, Provider provider) {
+        // ...
+        this.simpleBurningStorage.load(compoundTag, provider);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
+        // ...
+        this.simpleBurningStorage.save(compoundTag, provider)
+    }
 }
 ```
 
@@ -190,7 +201,7 @@ Then you can access the equivalent `litTime` and `litDuration` like:
 
 ```java
 this.storage.getCurrentBurning(); // as the `litTime` equivalent
+this.storage.setCurrentBurning(800);
 this.storage.getMaxBurning(); // as the `litDuration` equivalent
+this.storage.setMaxBurning(1600);
 ```
-
-Note: it is intended that you may modify these two values only through the `BurningStorage` interface. However, if such a design is too restrictive, you can always extend `SimpleBurningStorage` or directly implement your own `BurningStorage`.
