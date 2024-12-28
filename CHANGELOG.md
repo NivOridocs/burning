@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
++ Catch potential exceptions when creating dummy entities during `BurningStorage` registration. ([#1](https://github.com/NivOridocs/burning/issues/1))
+
 ## [0.3] - 2024-10-13
 
 ### Added
