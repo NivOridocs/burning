@@ -10,6 +10,7 @@ import net.fabricmc.fabric.mixin.lookup.BlockEntityTypeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Block;
@@ -31,6 +32,7 @@ public final class BurningRegistrar implements ServerStarting {
 
     private void registerAbstractFurnaceBurningStorages(RegistryAccess registries) {
         var blocks = registries.registryOrThrow(Registries.BLOCK).stream()
+                .filter(this::isNotBlacklisted)
                 .filter(this::isAbsent)
                 .filter(this::byEntity)
                 .toArray(Block[]::new);
@@ -75,5 +77,9 @@ public final class BurningRegistrar implements ServerStarting {
 
     private boolean isAbsent(Block block) {
         return BurningStorage.SIDED.getProvider(block) == null;
+    }
+
+    private boolean isNotBlacklisted(Block block) {
+        return !BuiltInRegistries.BLOCK.wrapAsHolder(block).is(BurningTags.BLACKLIST);
     }
 }
