@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.4] - 2025-01-01
+
 ### Fixed
 
 + Catch potential exceptions when creating dummy entities during `BurningStorage` registration. ([#1](https://github.com/NivOridocs/burning/issues/1))
@@ -27,3 +29,4 @@ Alpha release.
 [0.1]: https://github.com/NivOridocs/burning/releases/tag/0.1
 [0.2]: https://github.com/NivOridocs/burning/releases/tag/0.2
 [0.3]: https://github.com/NivOridocs/burning/releases/tag/0.3
+[0.4]: https://github.com/NivOridocs/burning/releases/tag/0.4
