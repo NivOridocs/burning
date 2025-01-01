@@ -1,5 +1,8 @@
 package niv.burning.impl;
 
+import static niv.burning.impl.BurningImpl.LOGGER;
+import static niv.burning.impl.BurningImpl.MOD_NAME;
+
 import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.ServerStarting;
@@ -57,8 +60,17 @@ public final class BurningRegistrar implements ServerStarting {
     }
 
     private boolean byEntity(Block block) {
-        return block instanceof EntityBlock e
-                && e.newBlockEntity(BlockPos.ZERO, block.defaultBlockState()) instanceof AbstractFurnaceBlockEntity;
+        try {
+            return block instanceof EntityBlock e
+                    && e.newBlockEntity(
+                            BlockPos.ZERO,
+                            block.defaultBlockState()) instanceof AbstractFurnaceBlockEntity;
+        } catch (RuntimeException rex) {
+            LOGGER.warn(
+                    "[{}] Cannot create an entity from {} due to a runtime exception, skipped. Exception message: {}",
+                    MOD_NAME, block, rex.getMessage());
+            return false;
+        }
     }
 
     private boolean isAbsent(Block block) {
