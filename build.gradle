@@ -102,12 +102,12 @@ modrinth {
 	versionName = "Burning ${project.mod_version}"
 	changelog = "sh CHANGELOG.sh".execute().text
     versionType = "beta"
-    gameVersions = ["${project.minecraft_version}", "1.21.1"]
+    gameVersions = Arrays.asList("${project.game_versions}".toString().split(","))
 	uploadFile = remapJar
 	additionalFiles = ["build/libs/burning-${project.mod_version}-sources.jar"]
 	syncBodyFrom = "sh README.sh".execute().text
 	dependencies {
         required.project "fabric-api"
     }
-	// debugMode = true
+	debugMode = true
 }
