@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.ToIntFunction;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +15,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
@@ -27,7 +25,8 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
  * To create a simple instance:
  *
  * <pre>
- * Burning.of(Items.COAL).withValue(800);
+ * BurningContext context = BurningContext.defaultInstance();
+ * Burning.of(Items.COAL, context).withValue(800, context);
  * </pre>
  * </p>
  */
@@ -54,7 +53,8 @@ public final class Burning {
     public static final Burning COAL;
 
     /**
-     * A zeroed instance with, as fuel, the item with higher burn duration.
+     * A zeroed instance with {@link Items#LAVA_BUCKET} as fuel. The same as
+     * {@link #LAVA_BUCKET}.
      */
     public static final Burning MIN_VALUE;
 
@@ -70,19 +70,15 @@ public final class Burning {
                         BuiltInRegistries.ITEM.byNameCodec().fieldOf("fuel").forGetter(Burning::getFuel))
                 .apply(instance, Burning::new)));
 
-        ZEROS = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
-        ONES = new HashMap<>(AbstractFurnaceBlockEntity.getFuel().size());
+        ZEROS = new HashMap<>(50);
+        ONES = new HashMap<>(50);
 
-        LAVA_BUCKET = of(Items.LAVA_BUCKET).one().zero();
-        BLAZE_ROD = of(Items.BLAZE_ROD).one().zero();
-        COAL = of(Items.COAL).one().zero();
+        LAVA_BUCKET = new Burning(0d, Items.LAVA_BUCKET).one().zero();
+        BLAZE_ROD = new Burning(0d, Items.BLAZE_ROD).one().zero();
+        COAL = new Burning(0d, Items.COAL).one().zero();
 
-        MIN_VALUE = AbstractFurnaceBlockEntity.getFuel().entrySet().stream()
-                .max((a, b) -> Integer.compare(a.getValue(), b.getValue()))
-                .map(Map.Entry::getKey)
-                .map(Burning::of)
-                .orElse(LAVA_BUCKET);
-        MAX_VALUE = MIN_VALUE.one();
+        MIN_VALUE = LAVA_BUCKET.zero();
+        MAX_VALUE = LAVA_BUCKET.one();
     }
 
     private final double percent;
@@ -112,81 +108,47 @@ public final class Burning {
     }
 
     /**
-     * Get the fuel's burn duration as returned from
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
+     * Get the fuel's burn duration as returned from the provided
+     * {@link BurningContext#burnDuration(Item)}.
      *
      * <p>
      * Note: the result value corresponds to what it's usually stored in
      * {@link AbstractFurnaceBlockEntity#litDuration}.
      * </p>
      *
+     * @param context Provided {@link BurningContext}.
      * @return A non-negative int: the fuel's burn duration.
      */
-    public int getBurnDuration() {
-        return defaultBurnDuration(this.fuel);
-    }
-
-    /**
-     * Same as {@link #getBurnDuration()} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A non-negative int: the fuel's burn duration.
-     */
-    public int getBurnDuration(ToIntFunction<ItemStack> customBurnDuration) {
-        return customBurnDuration.applyAsInt(new ItemStack(this.fuel));
+    public int getBurnDuration(BurningContext context) {
+        return context.burnDuration(this.fuel);
     }
 
     /**
      * Get the burning amount this object represents. That is,
-     * {@link #getBurnDuration()} * {@link #getPercent()}.
+     * {@link #getBurnDuration(BurningContext)} * {@link #getPercent()}.
      *
      * <p>
      * Note: the result value corresponds to what it's usually stored in
      * {@link AbstractFurnaceBlockEntity#litTime}.
      * </p>
      *
+     * @param context Provided {@link BurningContext}.
      * @return A non-negative Double: the burning amount.
      */
-    public Double getValue() {
-        return this.getBurnDuration() * this.percent;
+    public Double getValue(BurningContext context) {
+        return context.burnDuration(this.fuel) * this.percent;
     }
 
     /**
-     * Same as {@link #getValue()} but using the provided custom implementation
-     * instead of {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
+     * Get the reverse of {@link #getValue(BurningContext)}.
+     * That is, the difference between {@link #getBurnDuration(BurningContext)}
+     * and {@link #getValue(BurningContext)}.
      *
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A non-negative Double: the burning amount.
-     */
-    public Double getValue(ToIntFunction<ItemStack> customBurnDuration) {
-        return this.getBurnDuration(customBurnDuration) * this.percent;
-    }
-
-    /**
-     * Get the reverse of {@link #getValue()}. That is, the difference between
-     * {@link #getBurnDuration()} and {@link #getValue()}.
-     *
+     * @param context Provided {@link BurningContext}.
      * @return A non-negative Double: the burning missing amount.
      */
-    public Double getReverseValue() {
-        return this.getBurnDuration() * (1d - this.percent);
-    }
-
-    /**
-     * Same as {@link #getReverseValue()} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A non-negative Double: the burning missing amount.
-     */
-    public Double getReverseValue(ToIntFunction<ItemStack> customBurnDuration) {
-        return this.getBurnDuration(customBurnDuration) * (1d - this.percent);
+    public Double getReverseValue(BurningContext context) {
+        return context.burnDuration(this.fuel) * (1d - this.percent);
     }
 
     /**
@@ -223,14 +185,15 @@ public final class Burning {
      * to {@link #one()}.
      * </p>
      *
-     * @param value A int representing a fraction of this' fuel burn duration.
+     * @param value   A int representing a fraction of this' fuel burn duration.
+     * @param context Provided {@link BurningContext}.
      * @return A non-null instance with same fuel but different percentage.
      */
-    public Burning withValue(int value) {
+    public Burning withValue(int value, BurningContext context) {
         double max;
         if (value <= 0) {
             return this.zero();
-        } else if (value <= (max = getBurnDuration())) {
+        } else if (value <= (max = this.getBurnDuration(context))) {
             return new Burning(value / max, this.fuel);
         } else {
             return this.one();
@@ -238,65 +201,24 @@ public final class Burning {
     }
 
     /**
-     * Same as {@link #withValue(int)} but using the provided custom implementation
-     * instead of {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param value              A int representing a fraction of this' fuel burn
-     *                           duration.
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A non-null instance with same fuel but different percentage.
-     */
-    public Burning withValue(int value, ToIntFunction<ItemStack> customBurnDuration) {
-        double max;
-        if (value <= 0) {
-            return this.zero();
-        } else if (value <= (max = getBurnDuration(customBurnDuration))) {
-            return new Burning(value / max, this.fuel);
-        } else {
-            return this.one();
-        }
-    }
-
-    /**
-     * Return an instance with the provided fuel but which {@link #getValue()}
+     * Return an instance with the provided fuel but which
+     * {@link #getValue(BurningContext)}
      * should return the same number as this instance.
      *
-     * @param fuel A new fuel item.
+     * @param fuel    A new fuel item.
+     * @param context Provided {@link BurningContext}.
      * @return A non-null instance with different fuel.
      */
-    public Burning withFuel(Item fuel) {
+    public Burning withFuel(Item fuel, BurningContext context) {
         double max;
         double x;
         if (this.percent == 0) {
-            return ofOptional(fuel).orElse(this);
-        } else if ((max = defaultBurnDuration(fuel)) > 0
-                && (x = this.percent * max / getBurnDuration()) <= 1d) {
+            return ofOptional(fuel, context).orElse(this);
+        } else if ((max = context.burnDuration(fuel)) > 0
+                && (x = this.getValue(context) / max) <= 1d) {
             return new Burning(x, fuel);
         } else {
-            return ofOptional(fuel).orElse(this).one();
-        }
-    }
-
-    /**
-     * Same as {@link #withFuel(Item)} but using the provided custom implementation
-     * instead of {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param fuel               A new fuel item.
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A non-null instance with different fuel.
-     */
-    public Burning withFuel(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
-        double max;
-        double x;
-        if (this.percent == 0) {
-            return ofOptional(fuel, customBurnDuration).orElse(this);
-        } else if ((max = customBurnDuration.applyAsInt(new ItemStack(fuel))) > 0
-                && (x = this.percent * max / getBurnDuration(customBurnDuration)) <= 1d) {
-            return new Burning(x, fuel);
-        } else {
-            return this;
+            return ofOptional(fuel, context).orElse(this).one();
         }
     }
 
@@ -331,69 +253,26 @@ public final class Burning {
     }
 
     /**
-     * Return a zeroed instance with the provided fuel if
-     * {@link AbstractFurnaceBlockEntity#getFuel()} contains the latter as a key.
-     * Otherwise, return null.
+     * If the provided item is fuel according to the provided
+     * {@link BurningContext#isFuel(Item)}, then return a zeroed instance with the
+     * provided item as fuel. Otherwise, return null.
      *
-     * @param fuel A item which should be a fuel.
+     * @param fuel    A item which should be a fuel.
+     * @param context Provided {@link BurningContext}.
      * @return A zeroed instance if fuel is indeed a fuel, null otherwise.
      */
-    public static final @Nullable Burning of(Item fuel) {
-        return AbstractFurnaceBlockEntity.getFuel().containsKey(fuel)
+    public static final @Nullable Burning of(Item fuel, BurningContext context) {
+        return context.isFuel(fuel)
                 ? ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item))
                 : null;
     }
 
     /**
-     * Same as {@link #of(Item)} but using the provided custom implementation to
-     * check if fuel is indeed a fuel.
-     *
-     * @param fuel               A item which should be a fuel.
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A zeroed instance if fuel is indeed a fuel, null otherwise.
-     */
-    public static final @Nullable Burning of(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
-        return customBurnDuration.applyAsInt(new ItemStack(fuel)) > 0
-                ? ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item))
-                : null;
-    }
-
-    /**
-     * Wraps the result of {@link #of(Item)} into an {@link Optional}.
-     */
-    public static final Optional<Burning> ofOptional(Item fuel) {
-        return Optional.ofNullable(of(fuel));
-    }
-
-    /**
-     * Wraps the result of {@link #of(Item, ToIntFunction)} into an
+     * Wraps the result of {@link #of(Item, BurningContext)} into an
      * {@link Optional}.
      */
-    public static final Optional<Burning> ofOptional(Item fuel, ToIntFunction<ItemStack> customBurnDuration) {
-        return Optional.ofNullable(of(fuel, customBurnDuration));
-    }
-
-    /**
-     * Utility method that returns the stack's burn duration from
-     * {@link AbstractFurnaceBlockEntity#getFuel()}.
-     *
-     * @param stack A stack of potential fuel.
-     * @return The fuel's burn duration if stack is a fuel, zero otherwise.
-     */
-    public static final int defaultBurnDuration(ItemStack stack) {
-        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.getItem(), 0);
-    }
-
-    /**
-     * Utility method that returns the item's burn duration from
-     * {@link AbstractFurnaceBlockEntity#getFuel()}.
-     *
-     * @param stack A potential fuel item.
-     * @return The fuel's burn duration if item is a fuel, zero otherwise.
-     */
-    public static final int defaultBurnDuration(Item item) {
-        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(item, 0);
+    public static final Optional<Burning> ofOptional(Item fuel, BurningContext context) {
+        return Optional.ofNullable(of(fuel, context));
     }
 
     /**
@@ -404,31 +283,18 @@ public final class Burning {
      * whichever is the smaller among those greater than a and b's values sum.
      * </p>
      *
+     * @param a       May not be null.
+     * @param b       May not be null.
+     * @param context Provided {@link BurningContext}.
      * @return A instance of burning representing a and b's sum or
-     *         {@link #MAX_VALUE}, whichever {@link #getValue()} is lower.
+     *         {@link #MAX_VALUE}, whichever {@link #getValue(BurningContext)} is
+     *         lower.
      */
-    public static final Burning add(Burning a, Burning b) {
-        var value = a.getValue() + b.getValue();
-        return a.getBurnDuration() >= b.getBurnDuration()
-                ? combine(a, b, value)
-                : combine(b, a, value);
-    }
-
-    /**
-     * Same as {@link #add(Burning, Burning)} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A instance of burning representing a and b's sum or
-     *         {@link #MAX_VALUE}, whichever {@link #getValue()} is lower.
-     */
-    public static final Burning add(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
-        var value = a.getValue(customBurnDuration) + b.getValue(customBurnDuration);
-        return a.getBurnDuration(customBurnDuration) >= b.getBurnDuration(customBurnDuration)
-                ? combine(a, b, value, customBurnDuration)
-                : combine(b, a, value, customBurnDuration);
+    public static final Burning add(Burning a, Burning b, BurningContext context) {
+        var value = a.getValue(context) + b.getValue(context);
+        return a.getBurnDuration(context) >= b.getBurnDuration(context)
+                ? combine(a, b, value, context)
+                : combine(b, a, value, context);
     }
 
     /**
@@ -439,29 +305,16 @@ public final class Burning {
      * those greater than a and b's values difference.
      * </p>
      *
+     * @param a       May not be null.
+     * @param b       May not be null.
+     * @param context Provided {@link BurningContext}.
      * @return A instance of burning representing a and b's difference.
      */
-    public static final Burning subtract(Burning a, Burning b) {
-        var value = Math.max(0, a.getValue() - b.getValue());
-        return a.getBurnDuration() >= b.getBurnDuration()
-                ? combine(a, b, value)
-                : combine(b, a, value);
-    }
-
-    /**
-     * Same as {@link #subtract(Burning, Burning)} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return A instance of burning representing a and b's difference.
-     */
-    public static final Burning subtract(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
-        var value = Math.max(0, a.getValue(customBurnDuration) - b.getValue(customBurnDuration));
-        return a.getBurnDuration(customBurnDuration) >= b.getBurnDuration(customBurnDuration)
-                ? combine(a, b, value, customBurnDuration)
-                : combine(b, a, value, customBurnDuration);
+    public static final Burning subtract(Burning a, Burning b, BurningContext context) {
+        var value = Math.max(0, a.getValue(context) - b.getValue(context));
+        return a.getBurnDuration(context) >= b.getBurnDuration(context)
+                ? combine(a, b, value, context)
+                : combine(b, a, value, context);
     }
 
     /**
@@ -471,13 +324,14 @@ public final class Burning {
      * Double.compare(a == null ? 0d : a.getValue(), b == null ? 0d : b.getValue())
      * </pre>
      *
-     * @param a May be null.
-     * @param b May be null.
+     * @param a       May be null.
+     * @param b       May be null.
+     * @param context Provided {@link BurningContext}.
      * @return the value 0 if a's value is equal to b's value; a value less than 0
      *         if a's value is less than b's value; and a value greater than 0 if
      *         a's value is numerically greater than b' value.
      */
-    public static final int compareValue(Burning a, Burning b) {
+    public static final int compareValue(Burning a, Burning b, BurningContext context) {
         if (a == b) {
             return 0;
         } else if (a == null) {
@@ -485,102 +339,37 @@ public final class Burning {
         } else if (b == null) {
             return +1;
         } else {
-            return Double.compare(a.getValue(), b.getValue());
+            return Double.compare(a.getValue(context), b.getValue(context));
         }
     }
 
     /**
-     * Same as {@link #compareValue(Burning, Burning)} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param a                  May be null.
-     * @param b                  May be null.
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return the value 0 if a's value is equal to b's value; a value less than 0
-     *         if a's value is less than b's value; and a value greater than 0 if
-     *         a's value is numerically greater than b' value.
-     */
-    public static final int compareValue(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
-        if (a == b) {
-            return 0;
-        } else if (a == null) {
-            return -1;
-        } else if (b == null) {
-            return +1;
-        } else {
-            return Double.compare(a.getValue(customBurnDuration), b.getValue(customBurnDuration));
-        }
-    }
-
-    /**
-     * @param a May be null.
-     * @param b May be null.
+     * @param a       May be null.
+     * @param b       May be null.
+     * @param context Provided {@link BurningContext}.
      * @return a if <code>compareValue(a, b) >= 0</code>, b otherwise.
      */
-    public static final Burning maxValue(Burning a, Burning b) {
-        return compareValue(a, b) >= 0 ? a : b;
+    public static final Burning maxValue(Burning a, Burning b, BurningContext context) {
+        return compareValue(a, b, context) >= 0 ? a : b;
     }
 
     /**
-     * Same as {@link #maxValue(Burning, Burning)} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param a                  May be null.
-     * @param b                  May be null.
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return a if <code>compareValue(a, b, customBurnDuration) >= 0</code>, b
-     *         otherwise.
-     */
-    public static final Burning maxValue(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
-        return compareValue(a, b, customBurnDuration) >= 0 ? a : b;
-    }
-
-    /**
-     * @param a May be null.
-     * @param b May be null.
+     * @param a       May be null.
+     * @param b       May be null.
+     * @param context Provided {@link BurningContext}.
      * @return a if <code>compareValue(a, b) <= 0</code>, b otherwise.
      */
-    public static final Burning minValue(Burning a, Burning b) {
-        return compareValue(a, b) <= 0 ? a : b;
+    public static final Burning minValue(Burning a, Burning b, BurningContext context) {
+        return compareValue(a, b, context) <= 0 ? a : b;
     }
 
-    /**
-     * Same as {@link #minValue(Burning, Burning)} but using the provided custom
-     * implementation instead of
-     * {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     *
-     * @param a                  May be null.
-     * @param b                  May be null.
-     * @param customBurnDuration A custom implementation of
-     *                           {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
-     * @return a if <code>compareValue(a, b, customBurnDuration) <= 0</code>, b
-     *         otherwise.
-     */
-    public static final Burning minValue(Burning a, Burning b, ToIntFunction<ItemStack> customBurnDuration) {
-        return compareValue(a, b, customBurnDuration) <= 0 ? a : b;
-    }
-
-    private static final Burning combine(Burning high, Burning low, double value) {
-        if (value <= low.getBurnDuration()) {
-            return low.withValue((int) value);
-        } else if (value <= high.getBurnDuration()) {
-            return high.withValue((int) value);
+    private static final Burning combine(Burning high, Burning low, double value, BurningContext context) {
+        if (value <= low.getBurnDuration(context)) {
+            return low.withValue((int) value, context);
+        } else if (value <= high.getBurnDuration(context)) {
+            return high.withValue((int) value, context);
         } else {
-            return Burning.MIN_VALUE.withValue((int) value);
-        }
-    }
-
-    private static final Burning combine(Burning high, Burning low, double value, ToIntFunction<ItemStack> custom) {
-        if (value <= low.getBurnDuration(custom)) {
-            return low.withValue((int) value, custom);
-        } else if (value <= high.getBurnDuration(custom)) {
-            return high.withValue((int) value, custom);
-        } else {
-            return Burning.MIN_VALUE.withValue((int) value, custom);
+            return Burning.MIN_VALUE.withValue((int) value, context);
         }
     }
 
