@@ -11,19 +11,20 @@ public class AbstractFurnaceBurningStorages {
     private AbstractFurnaceBurningStorages() {
     }
 
-    public static AbstractFurnaceBurningStorage newFurnaceInstance() {
-        return newInstance(BlockEntityType.FURNACE, Blocks.FURNACE);
+    public static AbstractFurnaceBurningStorage createFurnace() {
+        return create(BlockEntityType.FURNACE, Blocks.FURNACE);
     }
 
-    public static AbstractFurnaceBurningStorage newBlastFurnaceInstance() {
-        return newInstance(BlockEntityType.BLAST_FURNACE, Blocks.BLAST_FURNACE);
+    public static AbstractFurnaceBurningStorage createBlastFurnace() {
+        return create(BlockEntityType.BLAST_FURNACE, Blocks.BLAST_FURNACE);
     }
 
-    public static AbstractFurnaceBurningStorage newSmokerInstance() {
-        return newInstance(BlockEntityType.SMOKER, Blocks.SMOKER);
+    public static AbstractFurnaceBurningStorage createSmoker() {
+        return create(BlockEntityType.SMOKER, Blocks.SMOKER);
     }
 
-    private static <T extends AbstractFurnaceBlockEntity> AbstractFurnaceBurningStorage newInstance(BlockEntityType<T> type, Block block) {
+    private static <T extends AbstractFurnaceBlockEntity> AbstractFurnaceBurningStorage create(
+            BlockEntityType<T> type, Block block) {
         return new AbstractFurnaceBurningStorage(type.create(BlockPos.ZERO, block.defaultBlockState())) {
             @Override
             protected void onFinalCommit() {
