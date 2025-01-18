@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
 public class SimpleBurningStorage
@@ -26,6 +27,8 @@ public class SimpleBurningStorage
 
     protected final ToIntFunction<ItemStack> getBurnDuration;
 
+    protected final BurningContext context;
+
     protected int currentBurning;
 
     protected int maxBurning;
@@ -37,7 +40,8 @@ public class SimpleBurningStorage
     }
 
     public SimpleBurningStorage(@Nullable ToIntFunction<ItemStack> getBurnDuration) {
-        this.getBurnDuration = getBurnDuration == null ? Burning::defaultBurnDuration : getBurnDuration;
+        this.getBurnDuration = getBurnDuration;
+        this.context = getBurnDuration == null ? BurningContext.defaultInstance() : BurningContext.defaultWith(getBurnDuration);
         this.currentBurning = 0;
         this.maxBurning = 0;
         this.zero = Burning.MIN_VALUE;
@@ -63,47 +67,50 @@ public class SimpleBurningStorage
 
     public void load(CompoundTag compoundTag, HolderLookup.Provider provider) {
         Burning.parse(provider, compoundTag.get(BURNING_TAG)).ifPresent(burning -> {
-            this.currentBurning = burning.getValue(this.getBurnDuration).intValue();
-            this.maxBurning = burning.getBurnDuration(this.getBurnDuration);
+            this.currentBurning = burning.getValue(this.context).intValue();
+            this.maxBurning = burning.getBurnDuration(this.context);
             this.zero = burning.zero();
         });
     }
 
     public void save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-        compoundTag.put(BURNING_TAG, this.getBurning().save(provider, new CompoundTag()));
+        compoundTag.put(BURNING_TAG, this.getBurning(this.context).save(provider, new CompoundTag()));
     }
 
     @Override
-    public Burning insert(Burning burning, TransactionContext transaction) {
-        int fuelTime = burning.getBurnDuration(this.getBurnDuration);
+    public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
+        context = getBurnDuration == null ? context : context.with(getBurnDuration);
+        int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.maxBurning, fuelTime) - this.currentBurning,
-                burning.getValue(this.getBurnDuration).intValue());
+                burning.getValue(context).intValue());
         updateSnapshots(transaction);
         this.currentBurning += value;
         if ((this.maxBurning > fuelTime && this.currentBurning <= fuelTime) || this.currentBurning > this.maxBurning) {
             this.maxBurning = fuelTime;
             this.zero = burning.zero();
         }
-        return burning.withValue(value, this.getBurnDuration);
+        return burning.withValue(value, context);
     }
 
     @Override
-    public Burning extract(Burning burning, TransactionContext transaction) {
-        int fuelTime = burning.getBurnDuration(this.getBurnDuration);
-        int value = Math.min(this.currentBurning, burning.getValue(this.getBurnDuration).intValue());
+    public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
+        context = getBurnDuration == null ? context : context.with(getBurnDuration);
+        int fuelTime = burning.getBurnDuration(context);
+        int value = Math.min(this.currentBurning, burning.getValue(context).intValue());
         updateSnapshots(transaction);
         this.currentBurning -= value;
         if (this.maxBurning > fuelTime && this.currentBurning <= fuelTime) {
             this.maxBurning = fuelTime;
             this.zero = burning.zero();
         }
-        return burning.withValue(value, this.getBurnDuration);
+        return burning.withValue(value, context);
     }
 
     @Override
-    public Burning getBurning() {
-        return this.zero.withValue(this.currentBurning, this.getBurnDuration);
+    public Burning getBurning(BurningContext context) {
+        context = getBurnDuration == null ? context : context.with(getBurnDuration);
+        return this.zero.withValue(this.currentBurning, context);
     }
 
     @Override

@@ -6,9 +6,9 @@ import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
 @ApiStatus.Internal
@@ -49,18 +49,14 @@ public class DynamicBurningStorage
         this.provider.litDuration.set(target, value);
     }
 
-    private int getBurnDuration(ItemStack stack) {
-        return Burning.defaultBurnDuration(stack);
-    }
-
     @Override
-    public Burning insert(Burning burning, TransactionContext transaction) {
+    public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
         double currentBurning = burning();
         double maxBurning = maxBurning();
-        int fuelTime = burning.getBurnDuration(this::getBurnDuration);
+        int fuelTime = burning.getBurnDuration(context);
         double value = Math.min(
                 Math.max(maxBurning, fuelTime) - currentBurning,
-                burning.getValue(this::getBurnDuration));
+                burning.getValue(context));
         updateSnapshots(transaction);
         currentBurning += value;
         burning(currentBurning);
@@ -68,14 +64,14 @@ public class DynamicBurningStorage
             maxBurning(fuelTime);
             this.zero = burning.zero();
         }
-        return burning.withValue((int) value, this::getBurnDuration);
+        return burning.withValue((int) value, context);
     }
 
     @Override
-    public Burning extract(Burning burning, TransactionContext transaction) {
+    public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
         double currentBurning = burning();
-        int fuelTime = burning.getBurnDuration(this::getBurnDuration);
-        double value = Math.min(currentBurning, burning.getValue(this::getBurnDuration));
+        int fuelTime = burning.getBurnDuration(context);
+        double value = Math.min(currentBurning, burning.getValue(context));
         updateSnapshots(transaction);
         currentBurning -= value;
         burning(currentBurning);
@@ -83,16 +79,16 @@ public class DynamicBurningStorage
             maxBurning(fuelTime);
             this.zero = burning.zero();
         }
-        return burning.withValue((int) value, this::getBurnDuration);
+        return burning.withValue((int) value, context);
     }
 
     @Override
-    public Burning getBurning() {
+    public Burning getBurning(BurningContext context) {
         double burning = burning();
-        if (burning > zero.getBurnDuration(this::getBurnDuration)) {
+        if (burning > zero.getBurnDuration(context)) {
             this.zero = Burning.MIN_VALUE;
         }
-        return zero.withValue((int) burning);
+        return zero.withValue((int) burning, context);
     }
 
     @Override

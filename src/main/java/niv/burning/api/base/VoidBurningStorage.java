@@ -2,6 +2,7 @@ package niv.burning.api.base;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
 public final class VoidBurningStorage implements BurningStorage {
@@ -17,17 +18,17 @@ public final class VoidBurningStorage implements BurningStorage {
     }
 
     @Override
-    public Burning insert(Burning burning, TransactionContext transaction) {
+    public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
         return burning;
     }
 
     @Override
-    public Burning extract(Burning burning, TransactionContext transaction) {
+    public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
         return burning.zero();
     }
 
     @Override
-    public Burning getBurning() {
+    public Burning getBurning(BurningContext context) {
         return Burning.MIN_VALUE;
     }
 }
