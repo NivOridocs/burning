@@ -4,6 +4,7 @@ import java.util.function.ToIntFunction;
 
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import niv.burning.impl.SimpleBurningContext;
 
@@ -69,6 +70,17 @@ public interface BurningContext {
      * @return The same {@link BurningContext} instance every time.
      */
     public static BurningContext defaultInstance() {
+        return SimpleBurningContext.instance();
+    }
+
+    /**
+     * Level specific now or existing instance.
+     *
+     * @param level The level in which a burning storage exists.
+     * @return The same {@link BurningContext} instance per level.
+     */
+    @SuppressWarnings("java:S1172")
+    public static BurningContext defaultInstance(Level level) {
         return SimpleBurningContext.instance();
     }
 

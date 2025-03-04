@@ -120,6 +120,7 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 
 // What you need
+Level world;
 BurningStorage source, target;
 
 // Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
@@ -127,11 +128,15 @@ Burning burning = Burning.of(Items.COAL).withValue(800);
 // or if you are using COAL, BLAZE_ROD, or LAVA_BUCKET
 Burning burning = Burning.COAL.withValue(800);
 
+// Create a burning context
+BurningContext context = BurningContext.defaultInstance(world);
+
 // How to
 Burning transferred = BurningStorage.transfer(
         source, // transfer from this storage
         target, // to this storage
         burning, // up to this amount of burning fuel
+        context, // with this burning context
         null); // creating a new transaction in doing so
 // `transferred` will have the same fuel as `burning`
 ```
