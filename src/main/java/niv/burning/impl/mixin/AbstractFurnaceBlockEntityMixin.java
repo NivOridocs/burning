@@ -55,6 +55,6 @@ public class AbstractFurnaceBlockEntityMixin implements AbstractFurnaceBlockEnti
     private static void injectAfterGetBurnDuration(CallbackInfo info,
             @Local AbstractFurnaceBlockEntity entity,
             @Local(ordinal = 0) ItemStack itemStack) {
-        ((AbstractFurnaceBlockEntityExtension) entity).burning_setFuel(itemStack.getItem());
+        entity.burning_setFuel(itemStack.getItem());
     }
 }

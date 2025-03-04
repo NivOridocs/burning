@@ -70,8 +70,8 @@ public final class Burning {
                         BuiltInRegistries.ITEM.byNameCodec().fieldOf("fuel").forGetter(Burning::getFuel))
                 .apply(instance, Burning::new)));
 
-        ZEROS = new HashMap<>(50);
-        ONES = new HashMap<>(50);
+        ZEROS = HashMap.newHashMap(50);
+        ONES = HashMap.newHashMap(50);
 
         LAVA_BUCKET = new Burning(0d, Items.LAVA_BUCKET).one().zero();
         BLAZE_ROD = new Burning(0d, Items.BLAZE_ROD).one().zero();

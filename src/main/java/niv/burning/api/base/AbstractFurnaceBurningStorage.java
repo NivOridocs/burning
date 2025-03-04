@@ -11,7 +11,6 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage.Snapshot;
-import niv.burning.impl.AbstractFurnaceBlockEntityExtension;
 
 public class AbstractFurnaceBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
@@ -24,12 +23,12 @@ public class AbstractFurnaceBurningStorage
     }
 
     private Burning getZero() {
-        var fuel = ((AbstractFurnaceBlockEntityExtension) this.target).burning_getFuel();
+        var fuel = this.target.burning_getFuel();
         return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, defaultWith(this.target::getBurnDuration));
     }
 
     private void setZero(Burning zero) {
-        ((AbstractFurnaceBlockEntityExtension) this.target).burning_setFuel(zero.getFuel());
+        this.target.burning_setFuel(zero.getFuel());
     }
 
     @Override

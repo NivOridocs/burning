@@ -52,7 +52,7 @@ public class SimpleBurningStorage
     }
 
     public void setCurrentBurning(int value) {
-        this.currentBurning = Math.max(0, Math.min(this.maxBurning, value));
+        this.currentBurning = Math.clamp(value, 0, this.maxBurning);
     }
 
     public int getMaxBurning() {
