@@ -1,14 +1,16 @@
 package niv.burning.api.base;
 
+import static niv.burning.api.BurningContext.defaultWith;
+
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage.Snapshot;
-import niv.burning.impl.AbstractFurnaceBlockEntityExtension;
 
 public class AbstractFurnaceBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
@@ -21,20 +23,21 @@ public class AbstractFurnaceBurningStorage
     }
 
     private Burning getZero() {
-        var fuel = ((AbstractFurnaceBlockEntityExtension) this.target).burning_getFuel();
-        return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, this.target::getBurnDuration);
+        var fuel = this.target.burning_getFuel();
+        return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, defaultWith(this.target::getBurnDuration));
     }
 
     private void setZero(Burning zero) {
-        ((AbstractFurnaceBlockEntityExtension) this.target).burning_setFuel(zero.getFuel());
+        this.target.burning_setFuel(zero.getFuel());
     }
 
     @Override
-    public Burning insert(Burning burning, TransactionContext transaction) {
-        int fuelTime = burning.getBurnDuration(this.target::getBurnDuration);
+    public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
+        context = context.with(this.target::getBurnDuration);
+        int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.target.litDuration, fuelTime) - this.target.litTime,
-                burning.getValue(this.target::getBurnDuration).intValue());
+                burning.getValue(context).intValue());
         updateSnapshots(transaction);
         this.target.litTime += value;
         if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
@@ -42,25 +45,27 @@ public class AbstractFurnaceBurningStorage
             this.target.litDuration = fuelTime;
             setZero(burning.zero());
         }
-        return burning.withValue(value, this.target::getBurnDuration);
+        return burning.withValue(value, context);
     }
 
     @Override
-    public Burning extract(Burning burning, TransactionContext transaction) {
-        int fuelTime = burning.getBurnDuration(this.target::getBurnDuration);
-        int value = Math.min(this.target.litTime, burning.getValue(this.target::getBurnDuration).intValue());
+    public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
+        context = context.with(this.target::getBurnDuration);
+        int fuelTime = burning.getBurnDuration(context);
+        int value = Math.min(this.target.litTime, burning.getValue(context).intValue());
         updateSnapshots(transaction);
         this.target.litTime -= value;
         if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {
             this.target.litDuration = fuelTime;
             setZero(burning.zero());
         }
-        return burning.withValue(value, this.target::getBurnDuration);
+        return burning.withValue(value, context);
     }
 
     @Override
-    public Burning getBurning() {
-        return this.getZero().withValue(this.target.litTime, this.target::getBurnDuration);
+    public Burning getBurning(BurningContext context) {
+        context = context.with(this.target::getBurnDuration);
+        return this.getZero().withValue(this.target.litTime, context);
     }
 
     @Override

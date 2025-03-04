@@ -13,10 +13,11 @@ import niv.burning.impl.BurningImpl;
 public interface BurningStorage {
 
     /**
-	 * Sided block access to burning storages.
-	 * The {@code Direction} parameter may be null, meaning that the full storage (ignoring side restrictions) should be queried.
-	 * Refer to {@link BlockApiLookup} for documentation on how to use this field.
-	 */
+     * Sided block access to burning storages.
+     * The {@code Direction} parameter may be null, meaning that the full storage
+     * (ignoring side restrictions) should be queried.
+     * Refer to {@link BlockApiLookup} for documentation on how to use this field.
+     */
     BlockApiLookup<BurningStorage, @Nullable Direction> SIDED = BlockApiLookup.get(
             ResourceLocation.tryBuild(BurningImpl.MOD_ID, "burning_storage"),
             BurningStorage.class, Direction.class);
@@ -41,12 +42,13 @@ public interface BurningStorage {
      * Try to insert the provided {@link Burning} into this storage.
      *
      * @param burning     The {@link Burning} to insert.
+     * @param context     The provided {@link BurningContext}.
      * @param transaction The transaction this operation is part of.
      * @return Another instance of {@link Burning} with the same fuel and less or
      *         equal percentage than the one passed as argument: the amount that was
      *         inserted.
      */
-    Burning insert(Burning burning, TransactionContext transaction);
+    Burning insert(Burning burning, BurningContext context, TransactionContext transaction);
 
     /**
      * Return false if calling {@link #extract} will absolutely always return a
@@ -68,40 +70,46 @@ public interface BurningStorage {
      * Try to extract up to the provided {@link Burning} from this storage.
      *
      * @param burning     The {@link Burning} to extract.
+     * @param context     The provided {@link BurningContext}.
      * @param transaction The transaction this operation is part of.
      * @return Another instance of {@link Burning} with the same fuel and less or
      *         equal percentage than the one passed as argument: the amount that was
      *         extracted.
      */
-    Burning extract(Burning burning, TransactionContext transaction);
+    Burning extract(Burning burning, BurningContext context, TransactionContext transaction);
 
     /**
      * Return the currently contained {@link Burning}.
      *
+     * @param context The provided {@link BurningContext}.
      * @return the currently contained {@link Burning}.
      */
-    Burning getBurning();
+    Burning getBurning(BurningContext context);
 
     /**
-	 * Transfer {@link Burning} between two burning storages, and return the amount that was successfully transferred.
-	 *
-	 * @param from The source storage. May be null.
-	 * @param to The target storage. May be null.
-	 * @param maxAmount The maximum amount that may be moved.
-	 * @param transaction The transaction this transfer is part of,
-	 *                    or {@code null} if a transaction should be opened just for this transfer.
-	 * @return The amount of {@link Burning} that was successfully transferred.
-	 */
-    public static Burning transfer(@Nullable BurningStorage from, @Nullable BurningStorage to,
-            Burning burning, @Nullable TransactionContext transaction) {
+     * Transfer {@link Burning} between two burning storages, and return the amount
+     * that was successfully transferred.
+     *
+     * @param from        The source storage. May be null.
+     * @param to          The target storage. May be null.
+     * @param burning     The maximum burning that may be moved.
+     * @param context     The provided {@link BurningContext}.
+     * @param transaction The transaction this transfer is part of,
+     *                    or {@code null} if a transaction should be opened just for
+     *                    this transfer.
+     * @return The amount of {@link Burning} that was successfully transferred.
+     */
+    public static Burning transfer(
+            @Nullable BurningStorage from, @Nullable BurningStorage to,
+            Burning burning, BurningContext context, @Nullable TransactionContext transaction) {
         if (from != null && to != null) {
             Burning extracted;
             try (var test = Transaction.openNested(transaction)) {
-                extracted = from.extract(burning, test);
+                extracted = from.extract(burning, context, test);
             }
             try (var actual = Transaction.openNested(transaction)) {
-                var inserted = to.insert(extracted, actual);
-                if (Objects.equal(inserted, from.extract(inserted, actual))) {
+                var inserted = to.insert(extracted, context, actual);
+                if (Objects.equal(inserted, from.extract(inserted, context, actual))) {
                     actual.commit();
                     return inserted;
                 }

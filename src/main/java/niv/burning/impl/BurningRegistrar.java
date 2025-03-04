@@ -38,7 +38,7 @@ public final class BurningRegistrar implements ServerStarting {
             BurningStorage.SIDED.registerForBlocks(
                     (world, pos, state, blockEntity, context) -> {
                         if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
-                            return ((AbstractFurnaceBlockEntityExtension) entity).burning_getBurningStorage();
+                            return entity.burning_getBurningStorage();
                         } else {
                             return null;
                         }

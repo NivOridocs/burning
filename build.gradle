@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.7-SNAPSHOT'
+	id 'fabric-loom' version '1.9-SNAPSHOT'
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.+'
 }
@@ -102,7 +102,7 @@ modrinth {
 	versionName = "Burning ${project.mod_version}"
 	changelog = "sh CHANGELOG.sh".execute().text
     versionType = "beta"
-    gameVersions = ["1.21", "1.21.1"]
+    gameVersions = ["${project.minecraft_version}", "1.21.1"]
 	uploadFile = remapJar
 	additionalFiles = ["build/libs/burning-${project.mod_version}-sources.jar"]
 	syncBodyFrom = "sh README.sh".execute().text

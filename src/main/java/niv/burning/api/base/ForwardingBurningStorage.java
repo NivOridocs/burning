@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
 public class ForwardingBurningStorage implements BurningStorage {
@@ -26,8 +27,8 @@ public class ForwardingBurningStorage implements BurningStorage {
     }
 
     @Override
-    public Burning insert(Burning burning, TransactionContext transaction) {
-        return this.target.get().insert(burning, transaction);
+    public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
+        return this.target.get().insert(burning, context, transaction);
     }
 
     @Override
@@ -36,12 +37,12 @@ public class ForwardingBurningStorage implements BurningStorage {
     }
 
     @Override
-    public Burning extract(Burning burning, TransactionContext transaction) {
-        return this.target.get().extract(burning, transaction);
+    public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
+        return this.target.get().extract(burning, context, transaction);
     }
 
     @Override
-    public Burning getBurning() {
-        return this.target.get().getBurning();
+    public Burning getBurning(BurningContext context) {
+        return this.target.get().getBurning(context);
     }
 }

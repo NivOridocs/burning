@@ -8,6 +8,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
+import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
 public class GameTestBurningRegistrar {
@@ -32,35 +33,39 @@ public class GameTestBurningRegistrar {
         testCommonBurningStorage(context);
     }
 
-    private void testCommonBurningStorage(GameTestHelper context) {
-        context.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
+    private void testCommonBurningStorage(GameTestHelper game) {
+        game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
 
-        var storage = BurningStorage.SIDED.find(context.getLevel(), context.absolutePos(POS), null);
-        context.assertTrue(storage != null,
+        final var context = BurningContext.defaultInstance();
+        game.assertTrue(context != null,
+                "Expected BurningContext, get null");
+
+        final var storage = BurningStorage.SIDED.find(game.getLevel(), game.absolutePos(POS), null);
+        game.assertTrue(storage != null,
                 "Expected BurningStorage, get null");
-        context.assertTrue(storage.getBurning().getValue().intValue() == 0,
-                "Expected 0, got " + storage.getBurning().getValue().intValue());
+        game.assertTrue(storage.getBurning(context).getValue(context).intValue() == 0,
+                "Expected 0, got " + storage.getBurning(context).getValue(context).intValue());
 
-        final var coal8 = Burning.COAL.withValue(800);
+        final var coal8 = Burning.COAL.withValue(800, context);
 
         try (var transaction = Transaction.openOuter()) {
-            storage.insert(coal8, transaction);
+            storage.insert(coal8, context, transaction);
             transaction.commit();
         }
 
-        context.assertTrue(storage.getBurning().getValue().intValue() == 800,
-                "Expected 800, got " + storage.getBurning().getValue().intValue());
-        context.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.TRUE);
+        game.assertTrue(storage.getBurning(context).getValue(context).intValue() == 800,
+                "Expected 800, got " + storage.getBurning(context).getValue(context).intValue());
+        game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.TRUE);
 
         try (var transaction = Transaction.openOuter()) {
-            storage.extract(coal8.one(), transaction);
+            storage.extract(coal8.one(), context, transaction);
             transaction.commit();
         }
 
-        context.assertTrue(storage.getBurning().getValue().intValue() == 0,
-                "Expected 0, got " + storage.getBurning().getValue().intValue());
-        context.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
+        game.assertTrue(storage.getBurning(context).getValue(context).intValue() == 0,
+                "Expected 0, got " + storage.getBurning(context).getValue(context).intValue());
+        game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
 
-        context.succeed();
+        game.succeed();
     }
 }
