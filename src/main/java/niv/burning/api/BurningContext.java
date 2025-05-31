@@ -1,11 +1,10 @@
 package niv.burning.api;
 
-import java.util.function.ToIntFunction;
-
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import niv.burning.impl.BurnDurationFunction;
 import niv.burning.impl.SimpleBurningContext;
 
 /**
@@ -56,13 +55,13 @@ public interface BurningContext {
 
     /**
      * Create a new {@link BurningContext} instance which will use the provided
-     * {@link ToIntFunction} to evaluate every burn duration.
+     * {@link BurnDurationFunction} to evaluate every burn duration.
      *
      * @param burnDuration May not be null. It has the same signature of
-     *                     {@link AbstractFurnaceBlockEntity#getBurnDuration(ItemStack)}.
+     *                     {@link AbstractFurnaceBlockEntity#getBurnDuration}.
      * @return A new {@link BurningContext} instance.
      */
-    BurningContext with(ToIntFunction<ItemStack> burnDuration);
+    BurningContext with(BurnDurationFunction burnDuration);
 
     /**
      * Default singleton lazy initialized instance.
@@ -115,7 +114,7 @@ public interface BurningContext {
     /**
      * Same as <code>BurningContext.defaultInstance().defaultWith(burnDuration)</code>.
      */
-    public static BurningContext defaultWith(ToIntFunction<ItemStack> burnDuration) {
+    public static BurningContext defaultWith(BurnDurationFunction burnDuration) {
         return defaultInstance().with(burnDuration);
     }
 }
