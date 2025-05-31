@@ -1,7 +1,5 @@
 package niv.burning.api.base;
 
-import java.util.function.ToIntFunction;
-
 import org.jetbrains.annotations.Nullable;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -9,12 +7,12 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.impl.BurnDurationFunction;
 
 public class SimpleBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
@@ -25,7 +23,7 @@ public class SimpleBurningStorage
     public static final record Snapshot(int currentBurning, int maxBurning, Burning zero) {
     }
 
-    protected final ToIntFunction<ItemStack> getBurnDuration;
+    protected final BurnDurationFunction burnDuration;
 
     protected final BurningContext context;
 
@@ -39,9 +37,9 @@ public class SimpleBurningStorage
         this(null);
     }
 
-    public SimpleBurningStorage(@Nullable ToIntFunction<ItemStack> getBurnDuration) {
-        this.getBurnDuration = getBurnDuration;
-        this.context = getBurnDuration == null ? BurningContext.defaultInstance() : BurningContext.defaultWith(getBurnDuration);
+    public SimpleBurningStorage(@Nullable BurnDurationFunction burnDuration) {
+        this.burnDuration = burnDuration;
+        this.context = this.burnDuration == null ? BurningContext.defaultInstance() : BurningContext.defaultWith(this.burnDuration);
         this.currentBurning = 0;
         this.maxBurning = 0;
         this.zero = Burning.MIN_VALUE;
@@ -79,7 +77,7 @@ public class SimpleBurningStorage
 
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = getBurnDuration == null ? context : context.with(getBurnDuration);
+        context = burnDuration == null ? context : context.with(burnDuration);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.maxBurning, fuelTime) - this.currentBurning,
@@ -95,7 +93,7 @@ public class SimpleBurningStorage
 
     @Override
     public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = getBurnDuration == null ? context : context.with(getBurnDuration);
+        context = burnDuration == null ? context : context.with(burnDuration);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(this.currentBurning, burning.getValue(context).intValue());
         updateSnapshots(transaction);
@@ -109,7 +107,7 @@ public class SimpleBurningStorage
 
     @Override
     public Burning getBurning(BurningContext context) {
-        context = getBurnDuration == null ? context : context.with(getBurnDuration);
+        context = burnDuration == null ? context : context.with(burnDuration);
         return this.zero.withValue(this.currentBurning, context);
     }
 
@@ -130,7 +128,7 @@ public class SimpleBurningStorage
     }
 
     public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity,
-            @Nullable ToIntFunction<ItemStack> customBurnDuration) {
+            @Nullable BurnDurationFunction customBurnDuration) {
         return new SimpleBurningStorage(customBurnDuration) {
             @Override
             protected void onFinalCommit() {

@@ -1,7 +1,5 @@
 package niv.burning.impl;
 
-import java.util.function.ToIntFunction;
-
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
@@ -35,7 +33,7 @@ public class SimpleBurningContext implements BurningContext {
     }
 
     @Override
-    public BurningContext with(final ToIntFunction<ItemStack> burnDuration) {
+    public BurningContext with(final BurnDurationFunction burnDuration) {
         return burnDuration == null ? this : new BurningContext() {
             @Override
             public boolean isFuel(Item item) {
@@ -58,7 +56,7 @@ public class SimpleBurningContext implements BurningContext {
             }
 
             @Override
-            public BurningContext with(ToIntFunction<ItemStack> burnDuration) {
+            public BurningContext with(BurnDurationFunction burnDuration) {
                 return SimpleBurningContext.this.with(burnDuration);
             }
         };
