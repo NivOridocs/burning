@@ -1,24 +1,71 @@
 # Burning
 
-**Burning** is a library mod that adds a unified interface for managing the amount of burning fuel within most, if not all, furnace-like blocks from both vanilla Minecraft and other mods.
+**Burning** is a library mod that adds a unified interface for managing the amount of burning fuel within most, if not all, furnace-like blocks from vanilla Minecraft and other mods.
 
 Uses Fabric's Lookup and Transaction APIs.
 
 ## Documentation
 
-**Burning** revolves around the [`BurningStorage`](src/main/java/niv/burning/api/BurningStorage.java) interface, which manages insertions and extraction of burning fuel, and the [`Burning`](src/main/java/niv/burning/api/Burning.java) class, which represent the burning fuel itself.
+**Burning** revolves around the [`BurningStorage`](src/main/java/niv/burning/api/BurningStorage.java) interface, which manages the insertions and extractions of burning fuel, and the [`Burning`](src/main/java/niv/burning/api/Burning.java) class, which represents the burning fuel itself.
 
 You may read the documentation or the source code to learn more.
 
-### Getting Started (for normal users)
+### Getting Started (for regular users)
 
-Install it as you'd with any other mod, and without further configuration,  every block which entity extends the `AbstractFurnaceBlockEntity` (Mojang mappings' name) abstract class, be them the vanilla _Furnace_, _Blast Furnace_, or _Smoker_, or any third-party block, will get a `BurningStorage` automatically and thus will be ready to interop with every other mod using this library.
+Install it as you'd with any other mod, and without further configuration, every block which entity extends the `AbstractFurnaceBlockEntity` (Mojang mappings' name) abstract class, be them the vanilla _Furnace_, _Blast Furnace_, or _Smoker_, or any third-party block, will get a `BurningStorage` automatically and thus will be ready to interop with every other mod using this library.
+
+### Blacklisting Blocks (for advanced users)
+
+You may not want some blocks extending `AbstractFurnaceBlockEntity` (Mojang mappings' name) to get a `BurningStorage`, whether because it doesn't work or because of your preference.
+
+By tagging any such block under the `#burning:blacklist` block tag, you can prevent it from automatically getting a BurningStorage.
+
+To do so, and for every such block, you must figure out the name of that block, which is usually `mod_name:block_name`.
+
+Then you must create a data pack like the one in the following example.
+
+<details>
+<summary>Expand</summary>
+
+```tree
+<datapack_name>.zip
+├── data
+│   └── <datapack_name>
+│       └── burning
+│           └── tags
+│               └── blocks (before 1.21) or block (after 1.21)
+│                   └── blacklist.json
+├── pack.mcmeta
+└── pack.png (optional)
+```
+
+</details>
+
+</br>
+
+Where the `blacklist.json` file shall look something like this:
+
+<details>
+<summary>Expand</summary>
+
+```json
+{
+    "replace": false,
+    "values": [
+        "mod_name:block_name_1",
+        "mod_name:block_name_2",
+        ...
+    ]
+}
+```
+
+</details>
 
 ### Dynamic Storages (for experienced users)
 
-Some mods add block entities that can burn fuel but that, for one reason or another, don't extend the `AbstractFurnaceBlockEntity` abstract class, and thus, that won't automatically get a `BurningStorage`.
+Some mods add block entities that can burn fuel, but that, for one reason or another, don't extend the `AbstractFurnaceBlockEntity` abstract class, and thus, they won't automatically get a `BurningStorage`.
 
-Fret not, for **Burning** makes available the `burning:dynamic_storage` dynamic registry, which, through data packs and a bit of reflection, resolves this specific problem.
+Fret not, for **Burning** offers the `burning:dynamic_storage` dynamic registry, which, through data packs and a bit of reflection, resolves this specific problem.
 
 How to do so.
 
@@ -30,7 +77,7 @@ For every such block entity, you must figure out a couple of things beforehand, 
 Then you must create a data pack like the one in the following example.
 
 <details>
-<summary>Data Pack Structure Example</summary>
+<summary>Expand</summary>
 
 ```tree
 <datapack_name>.zip
@@ -49,8 +96,10 @@ Then you must create a data pack like the one in the following example.
 
 </br>
 
+Where each `*.json` file shall look something like this:
+
 <details>
-<summary>JSON File Content Example</summary>
+<summary>Expand</summary>
 
 ```json
 {

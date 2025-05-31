@@ -21,6 +21,8 @@ public final class BurningImpl {
         MOD_NAME = "Burning";
         LOGGER = LoggerFactory.getLogger(MOD_NAME);
 
+        BurningTags.initialize();
+
         ServerLifecycleEvents.SERVER_STARTING.register(new BurningRegistrar());
         DynamicRegistries.register(DynamicBurningStorageProvider.REGISTRY, DynamicBurningStorageProvider.CODEC);
     }
