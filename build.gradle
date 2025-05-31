@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.9-SNAPSHOT'
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.+'
 }
@@ -50,7 +50,7 @@ processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": inputs.properties.version
 	}
 }
 
@@ -73,8 +73,10 @@ test {
 }
 
 jar {
+	inputs.property "archivesName", project.base.archivesName
+
 	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}"}
+		rename { "${it}_${inputs.properties.archivesName}"}
 	}
 }
 
@@ -101,7 +103,7 @@ modrinth {
     projectId = "${project.project_id}"
 	versionName = "Burning ${project.mod_version}"
 	changelog = "sh CHANGELOG.sh".execute().text
-    versionType = "beta"
+    versionType = "release"
     gameVersions = Arrays.asList("${project.game_versions}".toString().split(","))
 	uploadFile = remapJar
 	additionalFiles = ["build/libs/burning-${project.mod_version}-sources.jar"]
@@ -109,5 +111,5 @@ modrinth {
 	dependencies {
         required.project "fabric-api"
     }
-	debugMode = true
+	// debugMode = true
 }

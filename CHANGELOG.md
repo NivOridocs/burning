@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Major change to the APIs due to the introduction of `BurningContext` and `BurnDurationFunction`.
++ Stabilize APIs for 1.0 release.
+
+### Added
+
++ Add `#burning:blacklist` block tag for blacklisting blocks.
+
 ## [0.4] - 2025-01-01
 
 ### Fixed
