@@ -5,6 +5,10 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
+/**
+ * A singleton {@link BurningStorage} that always allows extraction of the maximum burning value,
+ * ignores insertion, and always reports {@link Burning#MAX_VALUE} as contained.
+ */
 public final class InfiniteBurningStorage implements BurningStorage {
 
     public static final InfiniteBurningStorage INSTANCE = new InfiniteBurningStorage();

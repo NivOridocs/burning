@@ -5,12 +5,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import niv.burning.api.BurningContext;
 
-public class SimpleBurningContext implements BurningContext {
+public class DefaultBurningContext implements BurningContext {
 
-    private final AbstractFurnaceBlockEntity target;
+    private static DefaultBurningContext instance;
 
-    public SimpleBurningContext(AbstractFurnaceBlockEntity target) {
-        this.target = target;
+    private DefaultBurningContext() {
     }
 
     @Override
@@ -25,11 +24,18 @@ public class SimpleBurningContext implements BurningContext {
 
     @Override
     public int burnDuration(Item item) {
-        return this.target.getBurnDuration(new ItemStack(item));
+        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(item, 0);
     }
 
     @Override
     public int burnDuration(ItemStack itemStack) {
-        return this.target.getBurnDuration(itemStack);
+        return AbstractFurnaceBlockEntity.getFuel().getOrDefault(itemStack.getItem(), 0);
+    }
+
+    public static synchronized BurningContext instance() {
+        if (instance == null) {
+            instance = new DefaultBurningContext();
+        }
+        return instance;
     }
 }

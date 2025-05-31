@@ -8,8 +8,8 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
-import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.impl.DefaultBurningContext;
 
 public class GameTestBurningRegistrar {
 
@@ -36,7 +36,7 @@ public class GameTestBurningRegistrar {
     private void testCommonBurningStorage(GameTestHelper game) {
         game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
 
-        final var context = BurningContext.defaultInstance();
+        final var context = DefaultBurningContext.instance();
         game.assertTrue(context != null,
                 "Expected BurningContext, get null");
 

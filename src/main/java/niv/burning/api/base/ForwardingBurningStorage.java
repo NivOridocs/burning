@@ -8,6 +8,10 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
+/**
+ * A {@link BurningStorage} implementation that delegates all operations to another storage instance.
+ * Useful for wrapping or dynamically forwarding to a target storage.
+ */
 public class ForwardingBurningStorage implements BurningStorage {
 
     protected final Supplier<? extends BurningStorage> target;

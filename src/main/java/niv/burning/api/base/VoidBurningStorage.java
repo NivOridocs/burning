@@ -5,6 +5,9 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
+/**
+ * A singleton {@link BurningStorage} that accepts all input but never stores anything and cannot be extracted from.
+ */
 public final class VoidBurningStorage implements BurningStorage {
 
     public static final VoidBurningStorage INSTANCE = new VoidBurningStorage();

@@ -96,7 +96,7 @@ Then you must create a data pack like the one in the following example.
 
 </br>
 
-Where each `*.json` file shall look something like this:
+Where each `*.json` file shall look something like this (comments are for illustration only, remove them in actual JSON):
 
 <details>
 <summary>Expand</summary>
@@ -172,13 +172,13 @@ import niv.burning.api.BurningStorage;
 Level world;
 BurningStorage source, target;
 
-// Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
-Burning burning = Burning.of(Items.COAL).withValue(800);
-// or if you are using COAL, BLAZE_ROD, or LAVA_BUCKET
-Burning burning = Burning.COAL.withValue(800);
-
 // Create a burning context
-BurningContext context = BurningContext.defaultInstance(world);
+BurningContext context = ...;
+
+// Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
+Burning burning = Burning.of(Items.COAL, context).withValue(800, context);
+// or if you are using COAL, BLAZE_ROD, or LAVA_BUCKET
+Burning burning = Burning.COAL.withValue(800, context);
 
 // How to
 Burning transferred = BurningStorage.transfer(
@@ -200,8 +200,11 @@ BurningStorage source, target;
 
 Burning burning = Burning.COAL.withValue(800);
 
+// Create a burning context
+BurningContext context = ...;
+
 try (Transaction transaction = Transaction.openOuter()) {
-    Burning transferred = BurningStorage.transfer(source, target, burning, transaction);
+    Burning transferred = BurningStorage.transfer(source, target, burning, context, transaction);
     if (burning.equals(transferred)) {
         transaction.commit();
     }
@@ -234,7 +237,7 @@ public class NewBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag compoundTag, Provider provider) {
         // ...
-        this.simpleBurningStorage.save(compoundTag, provider)
+        this.simpleBurningStorage.save(compoundTag, provider);
     }
 }
 ```
@@ -248,14 +251,14 @@ import niv.burning.api.BurningStorage;
 BlockEntityType<NewBlockEntity> NEW_BLOCK_ENTITY;
 
 // How to
-BurningStorage.SIDED.registerForBlockEntity((newBlockEntity, direction) -> newBlockEntity.storage, NEW_BLOCK_ENTITY);
+BurningStorage.SIDED.registerForBlockEntity((newBlockEntity, direction) -> newBlockEntity.burningStorage, NEW_BLOCK_ENTITY);
 ```
 
 Then you can access the equivalent `litTime` and `litDuration` like:
 
 ```java
-this.storage.getCurrentBurning(); // as the `litTime` equivalent
-this.storage.setCurrentBurning(800);
-this.storage.getMaxBurning(); // as the `litDuration` equivalent
-this.storage.setMaxBurning(1600);
+this.burningStorage.getCurrentBurning(); // as the `litTime` equivalent
+this.burningStorage.setCurrentBurning(800);
+this.burningStorage.getMaxBurning(); // as the `litDuration` equivalent
+this.burningStorage.setMaxBurning(1600);
 ```

@@ -5,6 +5,9 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
+/**
+ * A singleton {@link BurningStorage} that is always empty and does not support insertion or extraction.
+ */
 public final class EmptyBurningStorage implements BurningStorage {
 
     public static final EmptyBurningStorage INSTANCE = new EmptyBurningStorage();

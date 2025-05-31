@@ -1,7 +1,5 @@
 package niv.burning.api.base;
 
-import org.jetbrains.annotations.Nullable;
-
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.core.HolderLookup;
@@ -12,8 +10,12 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
-import niv.burning.impl.BurnDurationFunction;
+import niv.burning.impl.DefaultBurningContext;
 
+/**
+ * A basic {@link BurningStorage} implementation that tracks burning state and supports snapshotting.
+ * Can be used for simple block entities or as a utility for custom burning logic.
+ */
 public class SimpleBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
         implements BurningStorage {
@@ -23,9 +25,7 @@ public class SimpleBurningStorage
     public static final record Snapshot(int currentBurning, int maxBurning, Burning zero) {
     }
 
-    protected final BurnDurationFunction burnDuration;
-
-    protected final BurningContext context;
+    protected final BurningContext defaultContext = DefaultBurningContext.instance();
 
     protected int currentBurning;
 
@@ -34,12 +34,6 @@ public class SimpleBurningStorage
     protected Burning zero;
 
     public SimpleBurningStorage() {
-        this(null);
-    }
-
-    public SimpleBurningStorage(@Nullable BurnDurationFunction burnDuration) {
-        this.burnDuration = burnDuration;
-        this.context = this.burnDuration == null ? BurningContext.defaultInstance() : BurningContext.defaultWith(this.burnDuration);
         this.currentBurning = 0;
         this.maxBurning = 0;
         this.zero = Burning.MIN_VALUE;
@@ -65,19 +59,18 @@ public class SimpleBurningStorage
 
     public void load(CompoundTag compoundTag, HolderLookup.Provider provider) {
         Burning.parse(provider, compoundTag.get(BURNING_TAG)).ifPresent(burning -> {
-            this.currentBurning = burning.getValue(this.context).intValue();
-            this.maxBurning = burning.getBurnDuration(this.context);
+            this.currentBurning = burning.getValue(DefaultBurningContext.instance()).intValue();
+            this.maxBurning = burning.getBurnDuration(DefaultBurningContext.instance());
             this.zero = burning.zero();
         });
     }
 
     public void save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-        compoundTag.put(BURNING_TAG, this.getBurning(this.context).save(provider, new CompoundTag()));
+        compoundTag.put(BURNING_TAG, this.getBurning(DefaultBurningContext.instance()).save(provider, new CompoundTag()));
     }
 
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = burnDuration == null ? context : context.with(burnDuration);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.maxBurning, fuelTime) - this.currentBurning,
@@ -93,7 +86,6 @@ public class SimpleBurningStorage
 
     @Override
     public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = burnDuration == null ? context : context.with(burnDuration);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(this.currentBurning, burning.getValue(context).intValue());
         updateSnapshots(transaction);
@@ -107,7 +99,6 @@ public class SimpleBurningStorage
 
     @Override
     public Burning getBurning(BurningContext context) {
-        context = burnDuration == null ? context : context.with(burnDuration);
         return this.zero.withValue(this.currentBurning, context);
     }
 
@@ -123,13 +114,16 @@ public class SimpleBurningStorage
         this.zero = snapshot.zero;
     }
 
+    /**
+     * Creates a {@link SimpleBurningStorage} for the given block entity and context,
+     * with automatic block state updates on commit.
+     *
+     * @param blockEntity the block entity to associate with the storage
+     * @param context the burning context to use
+     * @return a new {@link SimpleBurningStorage} instance
+     */
     public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity) {
-        return getForBlockEntity(blockEntity, null);
-    }
-
-    public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity,
-            @Nullable BurnDurationFunction customBurnDuration) {
-        return new SimpleBurningStorage(customBurnDuration) {
+        return new SimpleBurningStorage() {
             @Override
             protected void onFinalCommit() {
                 var pos = blockEntity.worldPosition;
@@ -146,6 +140,12 @@ public class SimpleBurningStorage
         };
     }
 
+    /**
+     * Returns a {@link ContainerData} view for the given burning storage, exposing current and max burning values.
+     *
+     * @param burningStorage the storage to wrap
+     * @return a {@link ContainerData} for use in menus or GUIs
+     */
     public static final ContainerData getDefaultContainerData(SimpleBurningStorage burningStorage) {
         return new ContainerData() {
             @Override

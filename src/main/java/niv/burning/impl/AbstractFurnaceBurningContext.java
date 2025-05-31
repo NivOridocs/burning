@@ -5,22 +5,22 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import niv.burning.api.BurningContext;
 
-public class SimpleBurningContext implements BurningContext {
+public class AbstractFurnaceBurningContext implements BurningContext {
 
     private final AbstractFurnaceBlockEntity target;
 
-    public SimpleBurningContext(AbstractFurnaceBlockEntity target) {
-        this.target = target;
+    public AbstractFurnaceBurningContext(AbstractFurnaceBlockEntity entity) {
+        this.target = entity;
     }
 
     @Override
     public boolean isFuel(Item item) {
-        return AbstractFurnaceBlockEntity.getFuel().containsKey(item);
+        return DefaultBurningContext.instance().isFuel(item);
     }
 
     @Override
     public boolean isFuel(ItemStack itemStack) {
-        return AbstractFurnaceBlockEntity.getFuel().containsKey(itemStack.getItem());
+        return DefaultBurningContext.instance().isFuel(itemStack);
     }
 
     @Override
