@@ -13,11 +13,9 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import niv.burning.api.Burning;
-import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.impl.AbstractFurnaceBurningStorages;
-import niv.burning.impl.BurningContexts;
 import niv.burning.impl.DefaultBurningContext;
 import niv.burning.impl.DynamicBurningStorageProviders;
 import niv.burning.impl.DynamicBurningStorages;
@@ -32,15 +30,15 @@ class BurningStorageTests {
 
     @Test
     void testSimpleBurningStorage() {
-        testBurningStorage(SimpleBurningStorage::new, DefaultBurningContext.instance());
-        testBurningStorage(SimpleBurningStorage::new, BurningContexts.HALVED);
+        testBurningStorage(SimpleBurningStorage::new);
+        testBurningStorage(() -> new SimpleBurningStorage(i -> i / 2));
     }
 
     @Test
     void testAbstractFurnaceBurningStorage() {
-        testBurningStorage(AbstractFurnaceBurningStorages::createFurnace, DefaultBurningContext.instance());
-        testBurningStorage(AbstractFurnaceBurningStorages::createBlastFurnace, DefaultBurningContext.instance());
-        testBurningStorage(AbstractFurnaceBurningStorages::createSmoker, DefaultBurningContext.instance());
+        testBurningStorage(AbstractFurnaceBurningStorages::createFurnace);
+        testBurningStorage(AbstractFurnaceBurningStorages::createBlastFurnace);
+        testBurningStorage(AbstractFurnaceBurningStorages::createSmoker);
     }
 
     @Test
@@ -49,12 +47,13 @@ class BurningStorageTests {
         assertNotNull(DynamicBurningStorageProviders.createBlastFurnace());
         assertNotNull(DynamicBurningStorageProviders.createSmoker());
 
-        testBurningStorage(DynamicBurningStorages::createFurnace, DefaultBurningContext.instance());
-        testBurningStorage(DynamicBurningStorages::createBlastFurnace, DefaultBurningContext.instance());
-        testBurningStorage(DynamicBurningStorages::createSmoker, DefaultBurningContext.instance());
+        testBurningStorage(DynamicBurningStorages::createFurnace);
+        testBurningStorage(DynamicBurningStorages::createBlastFurnace);
+        testBurningStorage(DynamicBurningStorages::createSmoker);
     }
 
-    private void testBurningStorage(Supplier<? extends BurningStorage> constructor, BurningContext context) {
+    private void testBurningStorage(Supplier<? extends BurningStorage> constructor) {
+        var context = DefaultBurningContext.instance();
         assertNotNull(context);
 
         var storage = constructor.get();
@@ -111,22 +110,22 @@ class BurningStorageTests {
     }
 
     private void testTransfer(Supplier<? extends BurningStorage> constructor) {
-        testTransfer(constructor, SimpleBurningStorage::new, DefaultBurningContext.instance());
-        testTransfer(constructor, SimpleBurningStorage::new, BurningContexts.HALVED);
+        testTransfer(constructor, SimpleBurningStorage::new);
+        testTransfer(constructor, () -> new SimpleBurningStorage(i -> i / 2));
 
-        testTransfer(constructor, AbstractFurnaceBurningStorages::createFurnace, DefaultBurningContext.instance());
-        testTransfer(constructor, AbstractFurnaceBurningStorages::createBlastFurnace, DefaultBurningContext.instance());
-        testTransfer(constructor, AbstractFurnaceBurningStorages::createSmoker, DefaultBurningContext.instance());
+        testTransfer(constructor, AbstractFurnaceBurningStorages::createFurnace);
+        testTransfer(constructor, AbstractFurnaceBurningStorages::createBlastFurnace);
+        testTransfer(constructor, AbstractFurnaceBurningStorages::createSmoker);
 
-        testTransfer(constructor, DynamicBurningStorages::createFurnace, DefaultBurningContext.instance());
-        testTransfer(constructor, DynamicBurningStorages::createBlastFurnace, DefaultBurningContext.instance());
-        testTransfer(constructor, DynamicBurningStorages::createSmoker, DefaultBurningContext.instance());
+        testTransfer(constructor, DynamicBurningStorages::createFurnace);
+        testTransfer(constructor, DynamicBurningStorages::createBlastFurnace);
+        testTransfer(constructor, DynamicBurningStorages::createSmoker);
     }
 
     private void testTransfer(
             Supplier<? extends BurningStorage> sourceConstructor,
-            Supplier<? extends BurningStorage> targetConstructor,
-            BurningContext context) {
+            Supplier<? extends BurningStorage> targetConstructor) {
+        var context = DefaultBurningContext.instance();
         assertNotNull(context);
 
         var source = sourceConstructor.get();

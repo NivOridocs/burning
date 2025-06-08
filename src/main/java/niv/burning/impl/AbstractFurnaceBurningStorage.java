@@ -1,4 +1,4 @@
-package niv.burning.api.base;
+package niv.burning.impl;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
@@ -10,48 +10,36 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.api.base.SimpleBurningStorage.Snapshot;
 
 /**
- * A {@link BurningStorage} implementation for {@link AbstractFurnaceBlockEntity}.
- * Handles insertion, extraction, and state management for furnace-like block entities.
+ * A {@link BurningStorage} implementation for
+ * {@link AbstractFurnaceBlockEntity}.
+ * Handles insertion, extraction, and state management for furnace-like block
+ * entities.
  */
 public class AbstractFurnaceBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
         implements BurningStorage {
 
-    private static final BurningContext INTERNAL_CONTEXT = new BurningContext() {
-        @Override
-        public boolean isFuel(Item item) {
-            return true;
-        }
-        @Override
-        public boolean isFuel(ItemStack itemStack) {
-            return true;
-        }
-        @Override
-        public int burnDuration(Item item) {
-            return 0;
-        }
-        @Override
-        public int burnDuration(ItemStack itemStack) {
-            return 0;
-        }
-    };
-
     private final AbstractFurnaceBlockEntity target;
+
+    private final AbstractFurnaceBurningContext targetContext;
 
     /**
      * Constructs a storage wrapper for the given furnace block entity.
+     *
      * @param target the furnace block entity to wrap
      */
     public AbstractFurnaceBurningStorage(AbstractFurnaceBlockEntity target) {
         this.target = target;
+        this.targetContext = new AbstractFurnaceBurningContext(this.target);
     }
 
     private Burning getZero() {
         var fuel = this.target.burning_getFuel();
-        return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, INTERNAL_CONTEXT);
+        return fuel == null ? Burning.MIN_VALUE : Burning.of(fuel, this.targetContext);
     }
 
     private void setZero(Burning zero) {
@@ -60,10 +48,10 @@ public class AbstractFurnaceBurningStorage
 
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
-        int fuelTime = burning.getBurnDuration(context);
+        int fuelTime = burning.getBurnDuration(this.targetContext);
         int value = Math.min(
                 Math.max(this.target.litDuration, fuelTime) - this.target.litTime,
-                burning.getValue(context).intValue());
+                burning.getValue(this.targetContext).intValue());
         updateSnapshots(transaction);
         this.target.litTime += value;
         if ((this.target.litDuration > fuelTime && this.target.litTime <= fuelTime)
@@ -71,25 +59,25 @@ public class AbstractFurnaceBurningStorage
             this.target.litDuration = fuelTime;
             setZero(burning);
         }
-        return burning.withValue(value, context);
+        return burning.withValue(value, this.targetContext);
     }
 
     @Override
     public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
-        int fuelTime = burning.getBurnDuration(context);
-        int value = Math.min(this.target.litTime, burning.getValue(context).intValue());
+        int fuelTime = burning.getBurnDuration(this.targetContext);
+        int value = Math.min(this.target.litTime, burning.getValue(this.targetContext).intValue());
         updateSnapshots(transaction);
         this.target.litTime -= value;
         if (this.target.litDuration > fuelTime && this.target.litTime <= fuelTime) {
             this.target.litDuration = fuelTime;
             setZero(burning);
         }
-        return burning.withValue(value, context);
+        return burning.withValue(value, this.targetContext);
     }
 
     @Override
     public Burning getBurning(BurningContext context) {
-        return this.getZero().withValue(this.target.litTime, context);
+        return this.getZero().withValue(this.target.litTime, this.targetContext);
     }
 
     @Override
@@ -116,6 +104,35 @@ public class AbstractFurnaceBurningStorage
             state = state.setValue(BlockStateProperties.LIT, isBurning);
             this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
             BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
+        }
+    }
+
+    private static final class AbstractFurnaceBurningContext implements BurningContext {
+
+        private final AbstractFurnaceBlockEntity target;
+
+        public AbstractFurnaceBurningContext(AbstractFurnaceBlockEntity target) {
+            this.target = target;
+        }
+
+        @Override
+        public boolean isFuel(Item item) {
+            return AbstractFurnaceBlockEntity.getFuel().containsKey(item);
+        }
+
+        @Override
+        public boolean isFuel(ItemStack itemStack) {
+            return AbstractFurnaceBlockEntity.getFuel().containsKey(itemStack.getItem());
+        }
+
+        @Override
+        public int burnDuration(Item item) {
+            return this.target.getBurnDuration(new ItemStack(item));
+        }
+
+        @Override
+        public int burnDuration(ItemStack itemStack) {
+            return this.target.getBurnDuration(itemStack);
         }
     }
 }

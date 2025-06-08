@@ -173,7 +173,7 @@ Level world;
 BurningStorage source, target;
 
 // Create a burning context
-BurningContext context = ...;
+BurningContext context = DefaultBurningContext.instance();
 
 // Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
 Burning burning = Burning.of(Items.COAL, context).withValue(800, context);
@@ -201,7 +201,7 @@ BurningStorage source, target;
 Burning burning = Burning.COAL.withValue(800);
 
 // Create a burning context
-BurningContext context = ...;
+BurningContext context = DefaultBurningContext.instance();
 
 try (Transaction transaction = Transaction.openOuter()) {
     Burning transferred = BurningStorage.transfer(source, target, burning, context, transaction);

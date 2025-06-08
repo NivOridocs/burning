@@ -5,7 +5,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import niv.burning.api.base.AbstractFurnaceBurningStorage;
 
 public class AbstractFurnaceBurningStorages {
     private AbstractFurnaceBurningStorages() {

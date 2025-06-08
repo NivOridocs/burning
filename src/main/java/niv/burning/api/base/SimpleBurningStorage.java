@@ -1,16 +1,19 @@
 package niv.burning.api.base;
 
+import java.util.function.IntUnaryOperator;
+
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
-import niv.burning.impl.DefaultBurningContext;
 
 /**
  * A basic {@link BurningStorage} implementation that tracks burning state and supports snapshotting.
@@ -25,7 +28,24 @@ public class SimpleBurningStorage
     public static final record Snapshot(int currentBurning, int maxBurning, Burning zero) {
     }
 
-    protected final BurningContext defaultContext = DefaultBurningContext.instance();
+    private static final BurningContext CONTEXT_1M = new BurningContext() {
+        public boolean isFuel(Item item) {
+            return true;
+        }
+        public boolean isFuel(ItemStack itemStack) {
+            return true;
+        }
+        @Override
+        public int burnDuration(Item item) {
+            return 1_000_000;
+        }
+        @Override
+        public int burnDuration(ItemStack itemStack) {
+            return 1_000_000;
+        }
+    };
+
+    protected final IntUnaryOperator operator;
 
     protected int currentBurning;
 
@@ -34,6 +54,11 @@ public class SimpleBurningStorage
     protected Burning zero;
 
     public SimpleBurningStorage() {
+        this(null);
+    }
+
+    public SimpleBurningStorage(IntUnaryOperator operator) {
+        this.operator = operator == null ? IntUnaryOperator.identity() : operator;
         this.currentBurning = 0;
         this.maxBurning = 0;
         this.zero = Burning.MIN_VALUE;
@@ -59,18 +84,19 @@ public class SimpleBurningStorage
 
     public void load(CompoundTag compoundTag, HolderLookup.Provider provider) {
         Burning.parse(provider, compoundTag.get(BURNING_TAG)).ifPresent(burning -> {
-            this.currentBurning = burning.getValue(DefaultBurningContext.instance()).intValue();
-            this.maxBurning = burning.getBurnDuration(DefaultBurningContext.instance());
+            this.currentBurning = burning.getValue(CONTEXT_1M).intValue();
+            this.maxBurning = burning.getBurnDuration(CONTEXT_1M);
             this.zero = burning.zero();
         });
     }
 
     public void save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-        compoundTag.put(BURNING_TAG, this.getBurning(DefaultBurningContext.instance()).save(provider, new CompoundTag()));
+        compoundTag.put(BURNING_TAG, this.getBurning(CONTEXT_1M).save(provider, new CompoundTag()));
     }
 
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
+        context = new SimpleBurningContext(context, this.operator);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.maxBurning, fuelTime) - this.currentBurning,
@@ -86,6 +112,7 @@ public class SimpleBurningStorage
 
     @Override
     public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
+        context = new SimpleBurningContext(context, this.operator);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(this.currentBurning, burning.getValue(context).intValue());
         updateSnapshots(transaction);
@@ -99,6 +126,7 @@ public class SimpleBurningStorage
 
     @Override
     public Burning getBurning(BurningContext context) {
+        context = new SimpleBurningContext(context, this.operator);
         return this.zero.withValue(this.currentBurning, context);
     }
 
@@ -115,15 +143,15 @@ public class SimpleBurningStorage
     }
 
     /**
-     * Creates a {@link SimpleBurningStorage} for the given block entity and context,
+     * Creates a {@link SimpleBurningStorage} for the given block entity and operator,
      * with automatic block state updates on commit.
      *
      * @param blockEntity the block entity to associate with the storage
-     * @param context the burning context to use
-     * @return a new {@link SimpleBurningStorage} instance
+     * @param operator the {@link IntUnaryOperator} to apply to burning values (e.g., for scaling or modifying burn times)
+     * @return a new {@link SimpleBurningStorage} instance associated with the block entity and using the specified operator
      */
-    public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity) {
-        return new SimpleBurningStorage() {
+    public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity, IntUnaryOperator operator) {
+        return new SimpleBurningStorage(operator) {
             @Override
             protected void onFinalCommit() {
                 var pos = blockEntity.worldPosition;
@@ -179,5 +207,37 @@ public class SimpleBurningStorage
                 return 2;
             }
         };
+    }
+
+    protected static final class SimpleBurningContext implements BurningContext {
+
+        private final BurningContext source;
+
+        private final IntUnaryOperator operator;
+
+        public SimpleBurningContext(BurningContext source, IntUnaryOperator operator) {
+            this.source = source;
+            this.operator = operator;
+        }
+
+        @Override
+        public boolean isFuel(ItemStack itemStack) {
+            return this.source.isFuel(itemStack);
+        }
+
+        @Override
+        public boolean isFuel(Item item) {
+            return this.source.isFuel(item);
+        }
+
+        @Override
+        public int burnDuration(ItemStack itemStack) {
+            return this.operator.applyAsInt(this.source.burnDuration(itemStack));
+        }
+
+        @Override
+        public int burnDuration(Item item) {
+            return this.operator.applyAsInt(this.source.burnDuration(item));
+        }
     }
 }

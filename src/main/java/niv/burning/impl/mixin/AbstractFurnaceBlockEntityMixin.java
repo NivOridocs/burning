@@ -13,8 +13,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import niv.burning.api.BurningStorage;
-import niv.burning.api.base.AbstractFurnaceBurningStorage;
 import niv.burning.impl.AbstractFurnaceBlockEntityExtension;
+import niv.burning.impl.AbstractFurnaceBurningStorage;
 
 @Mixin(AbstractFurnaceBlockEntity.class)
 public class AbstractFurnaceBlockEntityMixin implements AbstractFurnaceBlockEntityExtension {
