@@ -31,20 +31,19 @@ public final class BurningRegistrar implements ServerStarting {
     }
 
     private void registerAbstractFurnaceBurningStorages(RegistryAccess registries) {
-        var blocks = registries.registryOrThrow(Registries.BLOCK).stream()
+        var eligibleBlocks = registries.registryOrThrow(Registries.BLOCK).stream()
                 .filter(this::isNotBlacklisted)
                 .filter(this::isAbsent)
                 .filter(this::byEntity)
                 .toArray(Block[]::new);
-        if (blocks.length > 0) {
+        if (eligibleBlocks.length > 0) {
             BurningStorage.SIDED.registerForBlocks(
                     (world, pos, state, blockEntity, context) -> {
                         if (blockEntity instanceof AbstractFurnaceBlockEntity entity) {
                             return entity.burning_getBurningStorage();
-                        } else {
-                            return null;
                         }
-                    }, blocks);
+                        return null;
+                    }, eligibleBlocks);
         }
     }
 
@@ -52,21 +51,21 @@ public final class BurningRegistrar implements ServerStarting {
         registries.registry(DynamicBurningStorageProvider.REGISTRY).stream()
                 .flatMap(Registry::stream)
                 .forEach(provider -> {
-                    var blocks = ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
+                    var providerBlocks = ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()
                             .filter(this::isAbsent)
                             .toArray(Block[]::new);
-                    if (blocks.length > 0) {
-                        BurningStorage.SIDED.registerForBlocks(provider, blocks);
+                    if (providerBlocks.length > 0) {
+                        BurningStorage.SIDED.registerForBlocks(provider, providerBlocks);
                     }
                 });
     }
 
     private boolean byEntity(Block block) {
         try {
-            return block instanceof EntityBlock e
-                    && e.newBlockEntity(
-                            BlockPos.ZERO,
-                            block.defaultBlockState()) instanceof AbstractFurnaceBlockEntity;
+            if (block instanceof EntityBlock entityBlock) {
+                return entityBlock.newBlockEntity(BlockPos.ZERO, block.defaultBlockState()) instanceof AbstractFurnaceBlockEntity;
+            }
+            return false;
         } catch (RuntimeException rex) {
             LOGGER.warn(
                     "[{}] Cannot create an entity from {} due to a runtime exception, skipped. Exception message: {}",

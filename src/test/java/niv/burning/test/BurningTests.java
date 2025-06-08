@@ -13,8 +13,8 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Items;
 import niv.burning.api.Burning;
-import niv.burning.api.BurningContext;
-import niv.burning.impl.BurnDurationFunctions;
+import niv.burning.impl.BurningContexts;
+import niv.burning.impl.DefaultBurningContext;
 
 class BurningTests {
 
@@ -26,7 +26,7 @@ class BurningTests {
 
     @Test
     void testBurningBuilder() {
-        var contextOne = BurningContext.defaultInstance();
+        var contextOne = DefaultBurningContext.instance();
         assertNotNull(contextOne);
 
         var burningOneOptional = Burning.ofOptional(Items.LAVA_BUCKET, contextOne);
@@ -36,7 +36,7 @@ class BurningTests {
         assertEquals(Items.LAVA_BUCKET, burningOne.getFuel());
         assertEquals(.5d, burningOne.getPercent());
 
-        var contextTwo = BurningContext.defaultWith(BurnDurationFunctions.HALVED);
+        var contextTwo = BurningContexts.HALVED;
         assertNotNull(contextTwo);
 
         var burningTwoOptional = Burning.ofOptional(Items.LAVA_BUCKET, contextTwo);
@@ -51,7 +51,7 @@ class BurningTests {
 
     @Test
     void testOperations() {
-        var context = BurningContext.defaultInstance();
+        var context = DefaultBurningContext.instance();
 
         final var coal16 = Burning.COAL.withValue(1600, context);
         final var coal6 = Burning.COAL.withValue(600, context);
@@ -85,7 +85,7 @@ class BurningTests {
 
     @Test
     void testOperationsHalf() {
-        final var halved = BurningContext.defaultWith(BurnDurationFunctions.HALVED);
+        final var halved = BurningContexts.HALVED;
         assertNotNull(halved);
 
         final var coal16 = Burning.COAL.withValue(1600 / 2, halved);
@@ -120,7 +120,7 @@ class BurningTests {
 
     @Test
     void testOperationsSquare() {
-        final var squared = BurningContext.defaultWith(BurnDurationFunctions.SQUARED);
+        final var squared = BurningContexts.SQUARED;
         assertNotNull(squared);
 
         final var coal16 = Burning.COAL.withValue(1600 * 1600, squared);

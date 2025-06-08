@@ -13,12 +13,12 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import niv.burning.api.Burning;
-import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.impl.AbstractFurnaceBurningStorages;
+import niv.burning.impl.DefaultBurningContext;
 import niv.burning.impl.DynamicBurningStorageProviders;
 import niv.burning.impl.DynamicBurningStorages;
-import niv.burning.impl.SimpleBurningStorages;
 
 class BurningStorageTests {
 
@@ -30,8 +30,8 @@ class BurningStorageTests {
 
     @Test
     void testSimpleBurningStorage() {
-        testBurningStorage(SimpleBurningStorages::createWhole);
-        testBurningStorage(SimpleBurningStorages::createHalved);
+        testBurningStorage(SimpleBurningStorage::new);
+        testBurningStorage(() -> new SimpleBurningStorage(i -> i / 2));
     }
 
     @Test
@@ -53,7 +53,7 @@ class BurningStorageTests {
     }
 
     private void testBurningStorage(Supplier<? extends BurningStorage> constructor) {
-        var context = BurningContext.defaultInstance();
+        var context = DefaultBurningContext.instance();
         assertNotNull(context);
 
         var storage = constructor.get();
@@ -110,8 +110,8 @@ class BurningStorageTests {
     }
 
     private void testTransfer(Supplier<? extends BurningStorage> constructor) {
-        testTransfer(constructor, SimpleBurningStorages::createWhole);
-        testTransfer(constructor, SimpleBurningStorages::createHalved);
+        testTransfer(constructor, SimpleBurningStorage::new);
+        testTransfer(constructor, () -> new SimpleBurningStorage(i -> i / 2));
 
         testTransfer(constructor, AbstractFurnaceBurningStorages::createFurnace);
         testTransfer(constructor, AbstractFurnaceBurningStorages::createBlastFurnace);
@@ -125,7 +125,7 @@ class BurningStorageTests {
     private void testTransfer(
             Supplier<? extends BurningStorage> sourceConstructor,
             Supplier<? extends BurningStorage> targetConstructor) {
-        var context = BurningContext.defaultInstance();
+        var context = DefaultBurningContext.instance();
         assertNotNull(context);
 
         var source = sourceConstructor.get();

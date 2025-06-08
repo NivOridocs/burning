@@ -32,6 +32,9 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
  */
 public final class Burning {
 
+    /**
+     * Codec for serializing and deserializing {@link Burning} instances.
+     */
     public static final Codec<Burning> CODEC;
 
     private static final Map<Item, Burning> ZEROS;
@@ -39,6 +42,7 @@ public final class Burning {
 
     /**
      * A zeroed instance with {@link Items#LAVA_BUCKET} as fuel.
+     * Used as a default or fallback value.
      */
     public static final Burning LAVA_BUCKET;
 
@@ -53,13 +57,12 @@ public final class Burning {
     public static final Burning COAL;
 
     /**
-     * A zeroed instance with {@link Items#LAVA_BUCKET} as fuel. The same as
-     * {@link #LAVA_BUCKET}.
+     * The minimum value for burning, equivalent to {@link #LAVA_BUCKET} zeroed.
      */
     public static final Burning MIN_VALUE;
 
     /**
-     * The result of <code>Burning.MIN_VALUE.one()</code>.
+     * The maximum value for burning, equivalent to <code>Burning.MIN_VALUE.one()</code>.
      */
     public static final Burning MAX_VALUE;
 
@@ -90,104 +93,101 @@ public final class Burning {
     }
 
     /**
-     * Get the percent of burning fuel this object represents.
+     * Returns the percent of burning fuel this object represents.
      *
-     * @return A double between 0 and 1.
+     * @return a double between 0 and 1, inclusive.
      */
     public double getPercent() {
         return percent;
     }
 
     /**
-     * Get the burning fuel of which percentage this object represents.
+     * Returns the burning fuel item of which this object represents a percentage.
      *
-     * @return A non-null instance of {@link Item}.
+     * @return a non-null instance of {@link Item}.
      */
     public Item getFuel() {
         return fuel;
     }
 
     /**
-     * Get the fuel's burn duration as returned from the provided
-     * {@link BurningContext#burnDuration(Item)}.
+     * Returns the fuel's burn duration as determined by the provided context.
      *
      * <p>
-     * Note: the result value corresponds to what it's usually stored in
+     * Note: The result value corresponds to what is usually stored in
      * {@link AbstractFurnaceBlockEntity#litDuration}.
      * </p>
      *
-     * @param context Provided {@link BurningContext}.
-     * @return A non-negative int: the fuel's burn duration.
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a non-negative int: the fuel's burn duration
      */
     public int getBurnDuration(BurningContext context) {
         return context.burnDuration(this.fuel);
     }
 
     /**
-     * Get the burning amount this object represents. That is,
+     * Returns the burning amount this object represents, i.e.,
      * {@link #getBurnDuration(BurningContext)} * {@link #getPercent()}.
      *
      * <p>
-     * Note: the result value corresponds to what it's usually stored in
+     * Note: The result value corresponds to what is usually stored in
      * {@link AbstractFurnaceBlockEntity#litTime}.
      * </p>
      *
-     * @param context Provided {@link BurningContext}.
-     * @return A non-negative Double: the burning amount.
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a non-negative Double: the burning amount
      */
     public Double getValue(BurningContext context) {
         return context.burnDuration(this.fuel) * this.percent;
     }
 
     /**
-     * Get the reverse of {@link #getValue(BurningContext)}.
+     * Returns the reverse of {@link #getValue(BurningContext)}.
      * That is, the difference between {@link #getBurnDuration(BurningContext)}
      * and {@link #getValue(BurningContext)}.
      *
-     * @param context Provided {@link BurningContext}.
-     * @return A non-negative Double: the burning missing amount.
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a non-negative Double: the remaining burning amount
      */
     public Double getReverseValue(BurningContext context) {
         return context.burnDuration(this.fuel) * (1d - this.percent);
     }
 
     /**
-     * Return a zeroed instance with the same fuel as this. That is, an instance
-     * with 0 percentage.
+     * Returns a zeroed instance with the same fuel as this (i.e., percent = 0).
      *
-     * @return A non-null instance. It's cached.
+     * @return a non-null instance, cached for efficiency
      */
     public Burning zero() {
         return ZEROS.computeIfAbsent(this.fuel, item -> new Burning(0, item));
     }
 
     /**
-     * Return an instance with the same fuel as this but with percentage equals to
-     * 1.
+     * Returns an instance with the same fuel as this but with percent = 1.
      *
-     * @return A non-null instance. It's cached.
+     * @return a non-null instance, cached for efficiency
      */
     public Burning one() {
         return ONES.computeIfAbsent(this.fuel, item -> new Burning(1, item));
     }
 
     /**
-     * Return an instance with the same fuel as this but with a percentage equal to
-     * the ratio between the provided value and this' fuel burn duration.
+     * Returns an instance with the same fuel as this but with a percentage equal to
+     * the ratio between the provided value and this fuel's burn duration.
      *
      * <p>
-     * If value is less than or equal to zero, this method is identical to
+     * If {@code value} is less than or equal to zero, this method is identical to
      * {@link #zero()}.
      * </p>
      *
      * <p>
-     * If value equals or exceeds this' fuel burn duration, this method is identical
+     * If {@code value} equals or exceeds this fuel's burn duration, this method is identical
      * to {@link #one()}.
      * </p>
      *
-     * @param value   A int representing a fraction of this' fuel burn duration.
-     * @param context Provided {@link BurningContext}.
-     * @return A non-null instance with same fuel but different percentage.
+     * @param value   an int representing a fraction of this fuel's burn duration
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a non-null instance with the same fuel but different percentage
      */
     public Burning withValue(int value, BurningContext context) {
         double max;
@@ -201,13 +201,12 @@ public final class Burning {
     }
 
     /**
-     * Return an instance with the provided fuel but which
-     * {@link #getValue(BurningContext)}
-     * should return the same number as this instance.
+     * Returns an instance with the provided fuel but with a percentage such that
+     * {@link #getValue(BurningContext)} returns the same value as this instance.
      *
-     * @param fuel    A new fuel item.
-     * @param context Provided {@link BurningContext}.
-     * @return A non-null instance with different fuel.
+     * @param fuel    a new fuel item
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a non-null instance with the new fuel and equivalent value, or this instance if not possible
      */
     public Burning withFuel(Item fuel, BurningContext context) {
         double max;
@@ -253,13 +252,12 @@ public final class Burning {
     }
 
     /**
-     * If the provided item is fuel according to the provided
-     * {@link BurningContext#isFuel(Item)}, then return a zeroed instance with the
-     * provided item as fuel. Otherwise, return null.
+     * Returns a zeroed instance with the provided item as fuel if it is a valid fuel
+     * according to the provided context, or {@code null} otherwise.
      *
-     * @param fuel    A item which should be a fuel.
-     * @param context Provided {@link BurningContext}.
-     * @return A zeroed instance if fuel is indeed a fuel, null otherwise.
+     * @param fuel    an item which should be a fuel
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a zeroed instance if {@code fuel} is a valid fuel, {@code null} otherwise
      */
     public static final @Nullable Burning of(Item fuel, BurningContext context) {
         return context.isFuel(fuel)
@@ -268,27 +266,28 @@ public final class Burning {
     }
 
     /**
-     * Wraps the result of {@link #of(Item, BurningContext)} into an
-     * {@link Optional}.
+     * Wraps the result of {@link #of(Item, BurningContext)} into an {@link Optional}.
+     *
+     * @param fuel    an item which should be a fuel
+     * @param context the {@link BurningContext} to use for lookup
+     * @return an {@link Optional} containing a zeroed instance if {@code fuel} is a valid fuel, or empty otherwise
      */
     public static final Optional<Burning> ofOptional(Item fuel, BurningContext context) {
         return Optional.ofNullable(of(fuel, context));
     }
 
     /**
-     * Add two instance together.
+     * Adds two {@link Burning} instances together.
      *
      * <p>
      * The result can have a's fuel, b's fuel, or {@link #MIN_VALUE}'s fuel,
-     * whichever is the smaller among those greater than a and b's values sum.
+     * whichever is the smallest among those greater than or equal to the sum of a and b's values.
      * </p>
      *
-     * @param a       May not be null.
-     * @param b       May not be null.
-     * @param context Provided {@link BurningContext}.
-     * @return A instance of burning representing a and b's sum or
-     *         {@link #MAX_VALUE}, whichever {@link #getValue(BurningContext)} is
-     *         lower.
+     * @param a       must not be null
+     * @param b       must not be null
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a {@link Burning} instance representing the sum, or {@link #MAX_VALUE}, whichever is lower
      */
     public static final Burning add(Burning a, Burning b, BurningContext context) {
         var value = a.getValue(context) + b.getValue(context);
@@ -298,17 +297,17 @@ public final class Burning {
     }
 
     /**
-     * Subtract b from a.
+     * Subtracts {@code b} from {@code a}.
      *
      * <p>
-     * The result can have a's fuel or b's fuel, whichever is the smaller among
-     * those greater than a and b's values difference.
+     * The result can have a's fuel or b's fuel, whichever is the smallest among
+     * those greater than or equal to the difference of a and b's values.
      * </p>
      *
-     * @param a       May not be null.
-     * @param b       May not be null.
-     * @param context Provided {@link BurningContext}.
-     * @return A instance of burning representing a and b's difference.
+     * @param a       must not be null
+     * @param b       must not be null
+     * @param context the {@link BurningContext} to use for lookup
+     * @return a {@link Burning} instance representing the difference
      */
     public static final Burning subtract(Burning a, Burning b, BurningContext context) {
         var value = Math.max(0, a.getValue(context) - b.getValue(context));
@@ -318,18 +317,18 @@ public final class Burning {
     }
 
     /**
-     * The same as calling:
+     * Compares the value of two {@link Burning} instances.
      *
+     * <p>
+     * Equivalent to:
      * <pre>
-     * Double.compare(a == null ? 0d : a.getValue(), b == null ? 0d : b.getValue())
+     * Double.compare(a == null ? 0d : a.getValue(context), b == null ? 0d : b.getValue(context))
      * </pre>
      *
-     * @param a       May be null.
-     * @param b       May be null.
-     * @param context Provided {@link BurningContext}.
-     * @return the value 0 if a's value is equal to b's value; a value less than 0
-     *         if a's value is less than b's value; and a value greater than 0 if
-     *         a's value is numerically greater than b' value.
+     * @param a       may be null
+     * @param b       may be null
+     * @param context the {@link BurningContext} to use for lookup
+     * @return 0 if a's value is equal to b's value; a value less than 0 if a's value is less; a value greater than 0 if a's value is greater
      */
     public static final int compareValue(Burning a, Burning b, BurningContext context) {
         if (a == b) {
@@ -344,20 +343,24 @@ public final class Burning {
     }
 
     /**
-     * @param a       May be null.
-     * @param b       May be null.
-     * @param context Provided {@link BurningContext}.
-     * @return a if <code>compareValue(a, b) >= 0</code>, b otherwise.
+     * Returns the {@link Burning} instance with the maximum value.
+     *
+     * @param a       may be null
+     * @param b       may be null
+     * @param context the {@link BurningContext} to use for lookup
+     * @return {@code a} if {@code compareValue(a, b) >= 0}, {@code b} otherwise
      */
     public static final Burning maxValue(Burning a, Burning b, BurningContext context) {
         return compareValue(a, b, context) >= 0 ? a : b;
     }
 
     /**
-     * @param a       May be null.
-     * @param b       May be null.
-     * @param context Provided {@link BurningContext}.
-     * @return a if <code>compareValue(a, b) <= 0</code>, b otherwise.
+     * Returns the {@link Burning} instance with the minimum value.
+     *
+     * @param a       may be null
+     * @param b       may be null
+     * @param context the {@link BurningContext} to use for lookup
+     * @return {@code a} if {@code compareValue(a, b) <= 0}, {@code b} otherwise
      */
     public static final Burning minValue(Burning a, Burning b, BurningContext context) {
         return compareValue(a, b, context) <= 0 ? a : b;

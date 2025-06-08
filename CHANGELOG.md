@@ -4,7 +4,7 @@
 
 ### Changed
 
-+ Major change to the APIs due to the introduction of `BurningContext` and `BurnDurationFunction`.
++ Major change to the APIs due to the introduction of the `BurningContext`.
 + Stabilize APIs for 1.0 release.
 
 ### Added
