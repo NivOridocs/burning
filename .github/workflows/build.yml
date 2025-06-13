@@ -30,10 +30,9 @@ jobs:
       - name: Build
         run: |
           chmod +x ./gradlew
+          ./gradlew genSources
           ./gradlew clean build
-
-      - name: Run Test Server
-        run: ./gradlew runTestServer
+          ./gradlew runTestServer
 
       - name: Store Reports
         if: failure()
