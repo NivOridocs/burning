@@ -31,7 +31,7 @@ public final class BurningRegistrar implements ServerStarting {
     }
 
     private void registerAbstractFurnaceBurningStorages(RegistryAccess registries) {
-        var eligibleBlocks = registries.registryOrThrow(Registries.BLOCK).stream()
+        var eligibleBlocks = registries.lookupOrThrow(Registries.BLOCK).stream()
                 .filter(this::isNotBlacklisted)
                 .filter(this::isAbsent)
                 .filter(this::byEntity)
@@ -48,7 +48,7 @@ public final class BurningRegistrar implements ServerStarting {
     }
 
     private void registerDynamicBurningStorages(RegistryAccess registries) {
-        registries.registry(DynamicBurningStorageProvider.REGISTRY).stream()
+        registries.lookup(DynamicBurningStorageProvider.REGISTRY).stream()
                 .flatMap(Registry::stream)
                 .forEach(provider -> {
                     var providerBlocks = ((BlockEntityTypeAccessor) provider.type).getBlocks().stream()

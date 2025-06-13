@@ -169,11 +169,15 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 
 // What you need
-Level world;
+Level world; // before 1.21.2
+ServerLevel world; // after 1.21.2
 BurningStorage source, target;
 
-// Create a burning context, you can use the SimpleBurningContext class or implement one yourself
+// Before 1.21.2, create a burning context, you can use the SimpleBurningContext class or implement one yourself
 BurningContext context = ...;
+
+// After 1.21.2, the FuelValues (Mojang mappings' name) class implements the BurningContext interface
+BurningContext context = world.fuelValues();
 
 // Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
 Burning burning = Burning.of(Items.COAL, context).withValue(800, context);
@@ -200,8 +204,11 @@ BurningStorage source, target;
 
 Burning burning = Burning.COAL.withValue(800);
 
-// Create a burning context, you can use the SimpleBurningContext class or implement one yourself
+// Before 1.21.2, create a burning context, you can use the SimpleBurningContext class or implement one yourself
 BurningContext context = ...;
+
+// After 1.21.2, the FuelValues (Mojang mappings' name) class implements the BurningContext interface
+BurningContext context = world.fuelValues();
 
 try (Transaction transaction = Transaction.openOuter()) {
     Burning transferred = BurningStorage.transfer(source, target, burning, context, transaction);
@@ -222,7 +229,7 @@ import niv.burning.api.base.SimpleBurningStorage;
 
 public class NewBlockEntity extends BlockEntity {
     // Add a simple burning storage to the entity
-    public final SimpleBurningStorage simpleBurningStorage = SimpleBurningStorage.getForBlockEntity(this);
+    public final SimpleBurningStorage simpleBurningStorage = SimpleBurningStorage.getForBlockEntity(this, i -> i);
 
     // (Optional) Add a simple container data for the burning storage
     public final ContainerData containerData = SimpleBurningStorage.getDefaultContainerData(this.simpleBurningStorage);
