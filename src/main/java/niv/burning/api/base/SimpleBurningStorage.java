@@ -16,8 +16,10 @@ import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
 
 /**
- * A basic {@link BurningStorage} implementation that tracks burning state and supports snapshotting.
- * Can be used for simple block entities or as a utility for custom burning logic.
+ * A basic {@link BurningStorage} implementation that tracks burning state and
+ * supports snapshotting.
+ * Can be used for simple block entities or as a utility for custom burning
+ * logic.
  */
 public class SimpleBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
@@ -29,16 +31,21 @@ public class SimpleBurningStorage
     }
 
     private static final BurningContext CONTEXT_1M = new BurningContext() {
+        @Override
         public boolean isFuel(Item item) {
             return true;
         }
+
+        @Override
         public boolean isFuel(ItemStack itemStack) {
             return true;
         }
+
         @Override
         public int burnDuration(Item item) {
             return 1_000_000;
         }
+
         @Override
         public int burnDuration(ItemStack itemStack) {
             return 1_000_000;
@@ -143,12 +150,15 @@ public class SimpleBurningStorage
     }
 
     /**
-     * Creates a {@link SimpleBurningStorage} for the given block entity and operator,
+     * Creates a {@link SimpleBurningStorage} for the given block entity and
+     * operator,
      * with automatic block state updates on commit.
      *
      * @param blockEntity the block entity to associate with the storage
-     * @param operator the {@link IntUnaryOperator} to apply to burning values (e.g., for scaling or modifying burn times)
-     * @return a new {@link SimpleBurningStorage} instance associated with the block entity and using the specified operator
+     * @param operator    the {@link IntUnaryOperator} to apply to burning values
+     *                    (e.g., for scaling or modifying burn times)
+     * @return a new {@link SimpleBurningStorage} instance associated with the block
+     *         entity and using the specified operator
      */
     public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity, IntUnaryOperator operator) {
         return new SimpleBurningStorage(operator) {
@@ -169,7 +179,8 @@ public class SimpleBurningStorage
     }
 
     /**
-     * Returns a {@link ContainerData} view for the given burning storage, exposing current and max burning values.
+     * Returns a {@link ContainerData} view for the given burning storage, exposing
+     * current and max burning values.
      *
      * @param burningStorage the storage to wrap
      * @return a {@link ContainerData} for use in menus or GUIs

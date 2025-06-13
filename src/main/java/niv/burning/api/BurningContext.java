@@ -17,7 +17,9 @@ public interface BurningContext {
      * @param item must not be null
      * @return true if the provided {@link Item} is a fuel according to this context, false otherwise
      */
-    boolean isFuel(Item item);
+    default boolean isFuel(Item item) {
+        return this.isFuel(new ItemStack(item));
+    }
 
     /**
      * Returns whether the provided {@link ItemStack} is considered fuel in this context.
@@ -33,7 +35,9 @@ public interface BurningContext {
      * @param item must not be null
      * @return a non-negative integer: the burn duration for the provided {@link Item} in this context
      */
-    int burnDuration(Item item);
+    default int burnDuration(Item item) {
+        return burnDuration(new ItemStack(item));
+    }
 
     /**
      * Returns the burn duration for the provided {@link ItemStack} if it is a fuel, or zero otherwise.
