@@ -55,10 +55,9 @@ public class AbstractFurnaceBurningStorage
         this.target.burning_setFuel(zero.getFuel());
     }
 
-    @SuppressWarnings("java:S1226")
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = new SimpleBurningContext(this.target);
+        context = new SimpleBurningContext(this.target, context);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.target.litDuration, fuelTime) - this.target.litTime,
@@ -73,10 +72,9 @@ public class AbstractFurnaceBurningStorage
         return burning.withValue(value, context);
     }
 
-    @SuppressWarnings("java:S1226")
     @Override
     public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = new SimpleBurningContext(this.target);
+        context = new SimpleBurningContext(this.target, context);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(this.target.litTime, burning.getValue(context).intValue());
         updateSnapshots(transaction);
@@ -88,10 +86,9 @@ public class AbstractFurnaceBurningStorage
         return burning.withValue(value, context);
     }
 
-    @SuppressWarnings("java:S1226")
     @Override
     public Burning getBurning(BurningContext context) {
-        context = new SimpleBurningContext(this.target);
+        context = new SimpleBurningContext(this.target, context);
         return this.getZero().withValue(this.target.litTime, context);
     }
 
