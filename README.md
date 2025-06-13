@@ -172,8 +172,8 @@ import niv.burning.api.BurningStorage;
 Level world;
 BurningStorage source, target;
 
-// Create a burning context
-BurningContext context = DefaultBurningContext.instance();
+// Create a burning context, you can use the SimpleBurningContext class or implement one yourself
+BurningContext context = ...;
 
 // Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
 Burning burning = Burning.of(Items.COAL, context).withValue(800, context);
@@ -200,8 +200,8 @@ BurningStorage source, target;
 
 Burning burning = Burning.COAL.withValue(800);
 
-// Create a burning context
-BurningContext context = DefaultBurningContext.instance();
+// Create a burning context, you can use the SimpleBurningContext class or implement one yourself
+BurningContext context = ...;
 
 try (Transaction transaction = Transaction.openOuter()) {
     Burning transferred = BurningStorage.transfer(source, target, burning, context, transaction);

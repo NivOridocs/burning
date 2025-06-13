@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0] - 2025-06-13
+
 ### Changed
 
 + Major change to the APIs due to the introduction of the `BurningContext`.
@@ -39,3 +41,4 @@ Alpha release.
 [0.2]: https://github.com/NivOridocs/burning/releases/tag/0.2
 [0.3]: https://github.com/NivOridocs/burning/releases/tag/0.3
 [0.4]: https://github.com/NivOridocs/burning/releases/tag/0.4
+[1.0]: https://github.com/NivOridocs/burning/releases/tag/1.0
