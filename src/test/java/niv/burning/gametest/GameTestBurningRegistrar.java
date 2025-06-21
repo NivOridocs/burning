@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
+import niv.burning.impl.FuelValuesBurningContext;
 
 public class GameTestBurningRegistrar {
 
@@ -35,7 +36,7 @@ public class GameTestBurningRegistrar {
     private void testCommonBurningStorage(GameTestHelper game) {
         game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
 
-        final var context = game.getLevel().fuelValues();
+        final var context = new FuelValuesBurningContext(game.getLevel().fuelValues());
         game.assertTrue(context != null,
                 "Expected BurningContext, get null");
 
