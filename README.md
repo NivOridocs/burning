@@ -176,8 +176,8 @@ BurningStorage source, target;
 // Before 1.21.2, create a burning context, you can use the SimpleBurningContext class or implement one yourself
 BurningContext context = ...;
 
-// After 1.21.2, the FuelValues (Mojang mappings' name) class implements the BurningContext interface
-BurningContext context = world.fuelValues();
+// After 1.21.2, you can also use the FuelValuesBurningContext wrapper class
+BurningContext context = new FuelValuesBurningContext(world.fuelValues());
 
 // Create the maximum amount of burning fuel to transfer, for instance, half a COAL worth of burning fuel
 Burning burning = Burning.of(Items.COAL, context).withValue(800, context);
@@ -207,8 +207,8 @@ Burning burning = Burning.COAL.withValue(800);
 // Before 1.21.2, create a burning context, you can use the SimpleBurningContext class or implement one yourself
 BurningContext context = ...;
 
-// After 1.21.2, the FuelValues (Mojang mappings' name) class implements the BurningContext interface
-BurningContext context = world.fuelValues();
+// After 1.21.2, you can also use the FuelValuesBurningContext wrapper class
+BurningContext context = new FuelValuesBurningContext(world.fuelValues());
 
 try (Transaction transaction = Transaction.openOuter()) {
     Burning transferred = BurningStorage.transfer(source, target, burning, context, transaction);

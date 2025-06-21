@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
++ Remove `FuelValues` mixin because of `AbstractMethodError`s when using the `burning`.
+
 ## [1.0] - 2025-06-13
 
 ### Changed
@@ -37,8 +41,8 @@
 
 Alpha release.
 
-[0.1]: https://github.com/NivOridocs/burning/releases/tag/0.1
-[0.2]: https://github.com/NivOridocs/burning/releases/tag/0.2
-[0.3]: https://github.com/NivOridocs/burning/releases/tag/0.3
-[0.4]: https://github.com/NivOridocs/burning/releases/tag/0.4
 [1.0]: https://github.com/NivOridocs/burning/releases/tag/1.0
+[0.4]: https://github.com/NivOridocs/burning/releases/tag/0.4
+[0.3]: https://github.com/NivOridocs/burning/releases/tag/0.3
+[0.2]: https://github.com/NivOridocs/burning/releases/tag/0.2
+[0.1]: https://github.com/NivOridocs/burning/releases/tag/0.1
