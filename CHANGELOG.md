@@ -2,13 +2,13 @@
 
 ## [Unreleased]
 
-## [1.0+1.21.2] - 2025-06-23
+## [1.0][1.0+1.21.2] - 2025-06-23
 
 ### Changed
 
 + Update implementation for 1.21.2 changes.
 
-## [1.0+1.21] - 2025-06-13
+## [1.0][1.0+1.21] - 2025-06-13
 
 ### Changed
 
@@ -43,8 +43,8 @@
 
 Alpha release.
 
-[1.0+.1.21.2]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21.2
-[1.0+.1.21]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21
+[1.0+1.21.2]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21.2
+[1.0+1.21]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21
 [0.4]: https://github.com/NivOridocs/burning/releases/tag/0.4
 [0.3]: https://github.com/NivOridocs/burning/releases/tag/0.3
 [0.2]: https://github.com/NivOridocs/burning/releases/tag/0.2
