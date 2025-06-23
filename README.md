@@ -71,8 +71,8 @@ How to do so.
 
 For every such block entity, you must figure out a couple of things beforehand, that is:
 * The name of that block entity's type.
-* The name of the field of that block entity that is functionally equivalent to `AbstractFurnaceBlockEntity.litTime` (Mojang mappings' name).
-* The name of the field of that block entity that is functionally equivalent to `AbstractFurnaceBlockEntity.litDuration` (Mojang mappings' name).
+* The name of the field of that block entity that is functionally equivalent to `AbstractFurnaceBlockEntity.litTimeRemaining` (Mojang mappings' name, `litTime` before 1.21.4).
+* The name of the field of that block entity that is functionally equivalent to `AbstractFurnaceBlockEntity.litTotalTime` (Mojang mappings' name, `litDuration` before 1.21.4).
 
 Then you must create a data pack like the one in the following example.
 
@@ -105,9 +105,9 @@ Where each `*.json` file shall look something like this (comments are for illust
 {
     // The name of that block entity's type
     "type": "example_mod:custom_furnace_entity_type",
-    // The name of the field of that block entity that is functionally equivalent to `litTime`
+    // The name of the field of that block entity that is functionally equivalent to `litTimeRemaining`
     "lit_time": "burnTime",
-    // The name of the field of that block entity that is functionally equivalent to `litDuration`
+    // The name of the field of that block entity that is functionally equivalent to `litTotalTime`
     "lit_duration": "fuelTime"
 }
 ```
@@ -222,7 +222,7 @@ Read the Fabric's Transaction API to understand the last example better.
 
 ### Use a burning storage in your block entity (for mod developers)
 
-Instead of implementing the two fields functionally equivalent to `AbstractFurnaceBlockEntity`'s `litTime` and `litDuration`, do the following:
+Instead of implementing the two fields functionally equivalent to `AbstractFurnaceBlockEntity`'s `litTimeRemaining` and `litTotalTime`, do the following:
 
 ```java
 import niv.burning.api.base.SimpleBurningStorage;
@@ -261,11 +261,11 @@ BlockEntityType<NewBlockEntity> NEW_BLOCK_ENTITY;
 BurningStorage.SIDED.registerForBlockEntity((newBlockEntity, direction) -> newBlockEntity.burningStorage, NEW_BLOCK_ENTITY);
 ```
 
-Then you can access the equivalent `litTime` and `litDuration` like:
+Then you can access the equivalent `litTimeRemaining` and `litTotalTime` like:
 
 ```java
-this.burningStorage.getCurrentBurning(); // as the `litTime` equivalent
+this.burningStorage.getCurrentBurning(); // as the `litTimeRemaining` equivalent
 this.burningStorage.setCurrentBurning(800);
-this.burningStorage.getMaxBurning(); // as the `litDuration` equivalent
+this.burningStorage.getMaxBurning(); // as the `litTotalTime` equivalent
 this.burningStorage.setMaxBurning(1600);
 ```

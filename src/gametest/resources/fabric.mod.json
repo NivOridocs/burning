@@ -1,0 +1,13 @@
+{
+    "schemaVersion": 1,
+    "id": "burning-test",
+    "version": "1.0.0",
+    "name": "Burning Game Test",
+    "icon": "assets/burning/icon.png",
+    "environment": "*",
+    "entrypoints": {
+        "fabric-gametest": [
+            "niv.burning.BurningGameTest"
+        ]
+    }
+}

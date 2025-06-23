@@ -31,7 +31,6 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew clean build
-          ./gradlew runTestServer
 
       - name: Store Reports
         if: failure()
