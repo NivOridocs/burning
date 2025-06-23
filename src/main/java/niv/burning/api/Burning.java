@@ -115,7 +115,7 @@ public final class Burning {
      *
      * <p>
      * Note: The result value corresponds to what is usually stored in
-     * {@link AbstractFurnaceBlockEntity#litDuration}.
+     * {@link AbstractFurnaceBlockEntity#litTotalTime}.
      * </p>
      *
      * @param context the {@link BurningContext} to use for lookup
@@ -131,7 +131,7 @@ public final class Burning {
      *
      * <p>
      * Note: The result value corresponds to what is usually stored in
-     * {@link AbstractFurnaceBlockEntity#litTime}.
+     * {@link AbstractFurnaceBlockEntity#litTimeRemaining}.
      * </p>
      *
      * @param context the {@link BurningContext} to use for lookup

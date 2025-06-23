@@ -7,8 +7,8 @@ public class DynamicBurningStorageProviders {
     private DynamicBurningStorageProviders() {
     }
 
-    private static final String LIT_TIME = "litTime";
-    private static final String LIT_DURATION = "litDuration";
+    private static final String LIT_TIME = "litTimeRemaining";
+    private static final String LIT_DURATION = "litTotalTime";
 
     public static final DynamicBurningStorageProvider createFurnace() {
         return create(BlockEntityType.FURNACE);
