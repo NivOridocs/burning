@@ -1,4 +1,4 @@
-package niv.burning.gametest;
+package niv.burning;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
@@ -11,7 +11,8 @@ import niv.burning.api.Burning;
 import niv.burning.api.BurningStorage;
 import niv.burning.impl.FuelValuesBurningContext;
 
-public class GameTestBurningRegistrar {
+@SuppressWarnings("java:S2187")
+public class BurningGameTest {
 
     private static final BlockPos POS = new BlockPos(0, 1, 0);
 

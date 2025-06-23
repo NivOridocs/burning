@@ -1,4 +1,4 @@
-package niv.burning.test;
+package niv.burning.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
-import niv.burning.api.Burning;
-import niv.burning.api.BurningStorage;
 import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.impl.AbstractFurnaceBurningStorages;
 import niv.burning.impl.DefaultBurningContext;

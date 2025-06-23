@@ -1,4 +1,4 @@
-package niv.burning.test;
+package niv.burning.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,7 +12,6 @@ import org.spongepowered.include.com.google.common.base.Objects;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Items;
-import niv.burning.api.Burning;
 import niv.burning.impl.BurningContexts;
 import niv.burning.impl.DefaultBurningContext;
 
