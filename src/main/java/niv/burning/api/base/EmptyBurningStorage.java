@@ -39,4 +39,9 @@ public final class EmptyBurningStorage implements BurningStorage {
     public Burning getBurning(BurningContext context) {
         return Burning.MIN_VALUE;
     }
+
+    @Override
+    public void setBurning(Burning burning, BurningContext context) {
+        // no-op
+    }
 }

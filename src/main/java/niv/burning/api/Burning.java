@@ -37,6 +37,15 @@ public final class Burning {
      */
     public static final Codec<Burning> CODEC;
 
+    /**
+     * Codec for serializing and deserializing zeroed {@link Burning} instances.
+     * <p>
+     * This codec maps item registry entries to {@code Burning} objects with percent zero,
+     * via the {@link Burning#ofZero(Item)} factory method.
+     * </p>
+     */
+    public static final Codec<Burning> ZERO_CODEC;
+
     private static final Map<Item, Burning> ZEROS;
     private static final Map<Item, Burning> ONES;
 
@@ -72,6 +81,8 @@ public final class Burning {
                         Codec.doubleRange(0d, 1d).fieldOf("percent").orElse(0d).forGetter(Burning::getPercent),
                         BuiltInRegistries.ITEM.byNameCodec().fieldOf("fuel").forGetter(Burning::getFuel))
                 .apply(instance, Burning::new)));
+
+        ZERO_CODEC = BuiltInRegistries.ITEM.byNameCodec().xmap(Burning::ofZero, Burning::getFuel);
 
         ZEROS = HashMap.newHashMap(50);
         ONES = HashMap.newHashMap(50);
@@ -274,6 +285,20 @@ public final class Burning {
      */
     public static final Optional<Burning> ofOptional(Item fuel, BurningContext context) {
         return Optional.ofNullable(of(fuel, context));
+    }
+
+    /**
+     * Returns a zeroed {@link Burning} instance for the specified fuel item (i.e., percent = 0).
+     *
+     * <p>
+     * Unlike {@link #of(Item, BurningContext)}, this method does not validate that the item is a valid fuel; it always returns an instance.
+     * </p>
+     *
+     * @param fuel an item to use as the fuel
+     * @return a {@link Burning} instance with the percent set to zero for the given fuel
+     */
+    public static final Burning ofZero(Item fuel) {
+        return ZEROS.computeIfAbsent(fuel, item -> new Burning(0, item));
     }
 
     /**

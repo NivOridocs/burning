@@ -92,6 +92,14 @@ public interface BurningStorage {
     Burning getBurning(BurningContext context);
 
     /**
+     * Sets the contained {@link Burning} value in this storage.
+     *
+     * @param burning the {@link Burning} value to set in storage
+     * @param context the {@link BurningContext} to use
+     */
+    void setBurning(Burning burning, BurningContext context);
+
+    /**
      * Transfers {@link Burning} between two burning storages, and returns the amount
      * that was successfully transferred.
      *
