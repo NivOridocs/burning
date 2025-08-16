@@ -2,10 +2,11 @@ package niv.burning.api.base;
 
 import java.util.function.IntUnaryOperator;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -25,32 +26,15 @@ public class SimpleBurningStorage
         extends SnapshotParticipant<SimpleBurningStorage.Snapshot>
         implements BurningStorage {
 
-    public static final String BURNING_TAG = "Burning";
+    public static final Codec<Snapshot> SNAPSHOT_CODEC = Codec
+            .lazyInitialized(() -> RecordCodecBuilder.create(instance -> instance.group(
+                    Codec.INT.fieldOf("currentBurning").forGetter(Snapshot::currentBurning),
+                    Codec.INT.fieldOf("maxBurning").forGetter(Snapshot::maxBurning),
+                    Burning.ZERO_CODEC.fieldOf("zero").forGetter(Snapshot::zero))
+                    .apply(instance, Snapshot::new)));
 
     public static final record Snapshot(int currentBurning, int maxBurning, Burning zero) {
     }
-
-    private static final BurningContext CONTEXT_1M = new BurningContext() {
-        @Override
-        public boolean isFuel(Item item) {
-            return true;
-        }
-
-        @Override
-        public boolean isFuel(ItemStack itemStack) {
-            return true;
-        }
-
-        @Override
-        public int burnDuration(Item item) {
-            return 1_000_000;
-        }
-
-        @Override
-        public int burnDuration(ItemStack itemStack) {
-            return 1_000_000;
-        }
-    };
 
     protected final IntUnaryOperator operator;
 
@@ -89,21 +73,9 @@ public class SimpleBurningStorage
         }
     }
 
-    public void load(CompoundTag compoundTag, HolderLookup.Provider provider) {
-        Burning.parse(provider, compoundTag.get(BURNING_TAG)).ifPresent(burning -> {
-            this.currentBurning = burning.getValue(CONTEXT_1M).intValue();
-            this.maxBurning = burning.getBurnDuration(CONTEXT_1M);
-            this.zero = burning.zero();
-        });
-    }
-
-    public void save(CompoundTag compoundTag, HolderLookup.Provider provider) {
-        compoundTag.put(BURNING_TAG, this.getBurning(CONTEXT_1M).save(provider, new CompoundTag()));
-    }
-
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = new SimpleBurningContext(context, this.operator);
+        context = new Context(context, this.operator);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(
                 Math.max(this.maxBurning, fuelTime) - this.currentBurning,
@@ -119,7 +91,7 @@ public class SimpleBurningStorage
 
     @Override
     public Burning extract(Burning burning, BurningContext context, TransactionContext transaction) {
-        context = new SimpleBurningContext(context, this.operator);
+        context = new Context(context, this.operator);
         int fuelTime = burning.getBurnDuration(context);
         int value = Math.min(this.currentBurning, burning.getValue(context).intValue());
         updateSnapshots(transaction);
@@ -133,17 +105,25 @@ public class SimpleBurningStorage
 
     @Override
     public Burning getBurning(BurningContext context) {
-        context = new SimpleBurningContext(context, this.operator);
+        context = new Context(context, this.operator);
         return this.zero.withValue(this.currentBurning, context);
     }
 
     @Override
-    protected Snapshot createSnapshot() {
+    public void setBurning(Burning burning, BurningContext context) {
+        context = new Context(context, this.operator);
+        this.currentBurning = burning.getValue(context).intValue();
+        this.maxBurning = burning.getBurnDuration(context);
+        this.zero = burning.zero();
+    }
+
+    @Override
+    public Snapshot createSnapshot() {
         return new Snapshot(this.currentBurning, this.maxBurning, this.zero);
     }
 
     @Override
-    protected void readSnapshot(Snapshot snapshot) {
+    public void readSnapshot(Snapshot snapshot) {
         this.currentBurning = snapshot.currentBurning;
         this.maxBurning = snapshot.maxBurning;
         this.zero = snapshot.zero;
@@ -220,13 +200,13 @@ public class SimpleBurningStorage
         };
     }
 
-    protected static final class SimpleBurningContext implements BurningContext {
+    protected static final class Context implements BurningContext {
 
         private final BurningContext source;
 
         private final IntUnaryOperator operator;
 
-        public SimpleBurningContext(BurningContext source, IntUnaryOperator operator) {
+        public Context(BurningContext source, IntUnaryOperator operator) {
             this.source = source;
             this.operator = operator;
         }

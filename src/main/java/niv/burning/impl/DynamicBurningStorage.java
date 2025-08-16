@@ -92,6 +92,13 @@ public class DynamicBurningStorage
     }
 
     @Override
+    public void setBurning(Burning burning, BurningContext context) {
+        this.burning(burning.getValue(context));
+        this.maxBurning(burning.getBurnDuration(context));
+        this.zero = burning.zero();
+    }
+
+    @Override
     protected Snapshot createSnapshot() {
         return new Snapshot(burning(), maxBurning(), zero);
     }

@@ -35,4 +35,9 @@ public final class InfiniteBurningStorage implements BurningStorage {
     public Burning getBurning(BurningContext context) {
         return Burning.MAX_VALUE;
     }
+
+    @Override
+    public void setBurning(Burning burning, BurningContext context) {
+        // no-op
+    }
 }
