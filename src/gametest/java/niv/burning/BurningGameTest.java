@@ -1,9 +1,10 @@
 package niv.burning;
 
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import static net.minecraft.network.chat.Component.literal;
+
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -16,19 +17,19 @@ public class BurningGameTest {
 
     private static final BlockPos POS = new BlockPos(0, 1, 0);
 
-    @GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
+    @GameTest
     public void testFurnaceBurningStorage(GameTestHelper context) {
         context.setBlock(POS, Blocks.FURNACE);
         testCommonBurningStorage(context);
     }
 
-    @GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
+    @GameTest
     public void testBlastFurnaceBurningStorage(GameTestHelper context) {
         context.setBlock(POS, Blocks.BLAST_FURNACE);
         testCommonBurningStorage(context);
     }
 
-    @GameTest(template = FabricGameTest.EMPTY_STRUCTURE)
+    @GameTest
     public void testSmokerBurningStorage(GameTestHelper context) {
         context.setBlock(POS, Blocks.SMOKER);
         testCommonBurningStorage(context);
@@ -39,13 +40,13 @@ public class BurningGameTest {
 
         final var context = new FuelValuesBurningContext(game.getLevel().fuelValues());
         game.assertTrue(context != null,
-                "Expected BurningContext, get null");
+                literal("Expected BurningContext, get null"));
 
         final var storage = BurningStorage.SIDED.find(game.getLevel(), game.absolutePos(POS), null);
         game.assertTrue(storage != null,
-                "Expected BurningStorage, get null");
+                literal("Expected BurningStorage, get null"));
         game.assertTrue(storage.getBurning(context).getValue(context).intValue() == 0,
-                "Expected 0, got " + storage.getBurning(context).getValue(context).intValue());
+                literal("Expected 0, got " + storage.getBurning(context).getValue(context).intValue()));
 
         final var coal8 = Burning.COAL.withValue(800, context);
 
@@ -55,7 +56,7 @@ public class BurningGameTest {
         }
 
         game.assertTrue(storage.getBurning(context).getValue(context).intValue() == 800,
-                "Expected 800, got " + storage.getBurning(context).getValue(context).intValue());
+                literal("Expected 800, got " + storage.getBurning(context).getValue(context).intValue()));
         game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.TRUE);
 
         try (var transaction = Transaction.openOuter()) {
@@ -64,7 +65,7 @@ public class BurningGameTest {
         }
 
         game.assertTrue(storage.getBurning(context).getValue(context).intValue() == 0,
-                "Expected 0, got " + storage.getBurning(context).getValue(context).intValue());
+                literal("Expected 0, got " + storage.getBurning(context).getValue(context).intValue()));
         game.assertBlockProperty(POS, BlockStateProperties.LIT, Boolean.FALSE);
 
         game.succeed();

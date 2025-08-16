@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
++ Update to Minecraft 1.21.6 as minimum version.
+
+### Added
+
++ Add more standalone handle methods for the serialization and deserialization of `BurningStorage` classes.
+
 ## [1.0][1.0+1.21.4] - 2025-06-24
 
 ### Changed
