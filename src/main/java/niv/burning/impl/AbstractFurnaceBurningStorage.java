@@ -5,11 +5,10 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.BurningStorageHelper;
 import niv.burning.api.base.SimpleBurningStorage;
 import niv.burning.api.base.SimpleBurningStorage.Snapshot;
 
@@ -70,11 +69,8 @@ public class AbstractFurnaceBurningStorage
     }
 
     @Override
-    public void setBurning(Burning burning, BurningContext context) {
-        context = new Context(this.target, context);
-        this.target.litTimeRemaining = burning.getValue(context).intValue();
-        this.target.litTotalTime = burning.getBurnDuration(context);
-        this.setZero(burning);
+    public boolean isBurning() {
+        return this.target.litTimeRemaining > 0;
     }
 
     @Override
@@ -94,14 +90,8 @@ public class AbstractFurnaceBurningStorage
 
     @Override
     protected void onFinalCommit() {
-        var state = this.target.level.getBlockState(this.target.worldPosition);
-        var wasBurning = state.getValue(BlockStateProperties.LIT).booleanValue();
-        var isBurning = this.target.litTimeRemaining > 0;
-        if (wasBurning != isBurning) {
-            state = state.setValue(BlockStateProperties.LIT, isBurning);
-            this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
-            BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
-        }
+        BurningStorageHelper.tryUpdateLitProperty(this.target, this);
+        this.target.setChanged();
     }
 
     protected final class Context implements BurningContext {

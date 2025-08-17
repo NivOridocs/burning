@@ -1,7 +1,5 @@
 package niv.burning.impl;
 
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT;
-
 import org.jetbrains.annotations.ApiStatus;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -10,6 +8,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.BurningStorageHelper;
 
 @ApiStatus.Internal
 public class DynamicBurningStorage
@@ -92,10 +91,8 @@ public class DynamicBurningStorage
     }
 
     @Override
-    public void setBurning(Burning burning, BurningContext context) {
-        this.burning(burning.getValue(context));
-        this.maxBurning(burning.getBurnDuration(context));
-        this.zero = burning.zero();
+    public boolean isBurning() {
+        return this.burning() > 0d;
     }
 
     @Override
@@ -112,13 +109,7 @@ public class DynamicBurningStorage
 
     @Override
     protected void onFinalCommit() {
-        var state = this.target.level.getBlockState(this.target.worldPosition);
-        var wasBurning = state.getValue(LIT).booleanValue();
-        var isBurning = burning() > 0;
-        if (wasBurning != isBurning) {
-            state = state.setValue(LIT, isBurning);
-            this.target.level.setBlockAndUpdate(this.target.worldPosition, state);
-            BlockEntity.setChanged(this.target.level, this.target.worldPosition, state);
-        }
+        BurningStorageHelper.tryUpdateLitProperty(this.target, this);
+        this.target.setChanged();
     }
 }

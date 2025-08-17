@@ -36,7 +36,7 @@ public final class VoidBurningStorage implements BurningStorage {
     }
 
     @Override
-    public void setBurning(Burning burning, BurningContext context) {
-        // no-op
+    public boolean isBurning() {
+        return false;
     }
 }
