@@ -1,5 +1,7 @@
 package niv.burning.api.base;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.function.IntUnaryOperator;
 
 import com.mojang.serialization.Codec;
@@ -7,14 +9,12 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import niv.burning.api.Burning;
 import niv.burning.api.BurningContext;
 import niv.burning.api.BurningStorage;
+import niv.burning.api.BurningStorageListener;
 
 /**
  * A basic {@link BurningStorage} implementation that tracks burning state and
@@ -44,6 +44,8 @@ public class SimpleBurningStorage
 
     protected Burning zero;
 
+    private Collection<BurningStorageListener> listeners;
+
     public SimpleBurningStorage() {
         this(null);
     }
@@ -68,10 +70,49 @@ public class SimpleBurningStorage
     }
 
     public void setMaxBurning(int value) {
-        if (this.currentBurning <= value) {
-            this.maxBurning = value;
+        this.maxBurning = Math.max(0, value);
+        if (this.currentBurning > this.maxBurning) {
+            this.currentBurning = this.maxBurning;
         }
     }
+
+    public void addListener(BurningStorageListener burningStorageListener) {
+        if (this.listeners == null)
+            this.listeners = new ArrayList<>();
+        this.listeners.add(burningStorageListener);
+    }
+
+    public void removeListener(BurningStorageListener burningStorageListener) {
+        if (this.listeners != null)
+            this.listeners.remove(burningStorageListener);
+    }
+
+	protected void setChanged() {
+        if (this.listeners != null)
+            for (var burningStorageListener : this.listeners)
+                burningStorageListener.burningStorageChanged(this);
+    }
+
+    // From {@link SnapshotParticipant}
+
+    @Override
+    public Snapshot createSnapshot() {
+        return new Snapshot(this.currentBurning, this.maxBurning, this.zero);
+    }
+
+    @Override
+    public void readSnapshot(Snapshot snapshot) {
+        this.currentBurning = snapshot.currentBurning;
+        this.maxBurning = snapshot.maxBurning;
+        this.zero = snapshot.zero;
+    }
+
+    @Override
+    protected void onFinalCommit() {
+        this.setChanged();
+    }
+
+    // From {@link BurningStorage}
 
     @Override
     public Burning insert(Burning burning, BurningContext context, TransactionContext transaction) {
@@ -110,97 +151,11 @@ public class SimpleBurningStorage
     }
 
     @Override
-    public void setBurning(Burning burning, BurningContext context) {
-        context = new Context(context, this.operator);
-        this.currentBurning = burning.getValue(context).intValue();
-        this.maxBurning = burning.getBurnDuration(context);
-        this.zero = burning.zero();
+    public boolean isBurning() {
+        return this.currentBurning > 0;
     }
 
-    @Override
-    public Snapshot createSnapshot() {
-        return new Snapshot(this.currentBurning, this.maxBurning, this.zero);
-    }
-
-    @Override
-    public void readSnapshot(Snapshot snapshot) {
-        this.currentBurning = snapshot.currentBurning;
-        this.maxBurning = snapshot.maxBurning;
-        this.zero = snapshot.zero;
-    }
-
-    /**
-     * Creates a {@link SimpleBurningStorage} for the given block entity and
-     * operator,
-     * with automatic block state updates on commit.
-     *
-     * @param blockEntity the block entity to associate with the storage
-     * @param operator    the {@link IntUnaryOperator} to apply to burning values
-     *                    (e.g., for scaling or modifying burn times)
-     * @return a new {@link SimpleBurningStorage} instance associated with the block
-     *         entity and using the specified operator
-     */
-    public static final SimpleBurningStorage getForBlockEntity(BlockEntity blockEntity, IntUnaryOperator operator) {
-        return new SimpleBurningStorage(operator) {
-            @Override
-            protected void onFinalCommit() {
-                var pos = blockEntity.worldPosition;
-                var level = blockEntity.level;
-                var state = level.getBlockState(pos);
-                var wasBurning = state.getOptionalValue(BlockStateProperties.LIT).orElse(Boolean.FALSE).booleanValue();
-                var isBurning = this.getCurrentBurning() > 0;
-                if (wasBurning != isBurning) {
-                    state = state.trySetValue(BlockStateProperties.LIT, isBurning);
-                    level.setBlockAndUpdate(pos, state);
-                    BlockEntity.setChanged(level, pos, state);
-                }
-            }
-        };
-    }
-
-    /**
-     * Returns a {@link ContainerData} view for the given burning storage, exposing
-     * current and max burning values.
-     *
-     * @param burningStorage the storage to wrap
-     * @return a {@link ContainerData} for use in menus or GUIs
-     */
-    public static final ContainerData getDefaultContainerData(SimpleBurningStorage burningStorage) {
-        return new ContainerData() {
-            @Override
-            public int get(int index) {
-                switch (index) {
-                    case 0:
-                        return burningStorage.getCurrentBurning();
-                    case 1:
-                        return burningStorage.getMaxBurning();
-                    default:
-                        return 0;
-                }
-            }
-
-            @Override
-            public void set(int index, int value) {
-                switch (index) {
-                    case 0:
-                        burningStorage.setCurrentBurning(value);
-                        break;
-                    case 1:
-                        burningStorage.setMaxBurning(value);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            @Override
-            public int getCount() {
-                return 2;
-            }
-        };
-    }
-
-    protected static final class Context implements BurningContext {
+    private static final class Context implements BurningContext {
 
         private final BurningContext source;
 
