@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.1][1.1+1.21.6] - 2025-08-17
+
 ### Changed
 
 + Update to Minecraft 1.21.6 as minimum version.
@@ -57,6 +59,7 @@
 
 Alpha release.
 
+[1.1+1.21.6]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21.4
 [1.0+1.21.4]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21.4
 [1.0+1.21.2]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21.2
 [1.0+1.21]: https://github.com/NivOridocs/burning/releases/tag/1.0+1.21
